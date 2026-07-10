@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Field from './Field';
-// import Amoeba from './Amoeba';
+import Creature from './Creature/Creature';
 
 export default function World() {
   return (
@@ -14,7 +14,7 @@ export default function World() {
 
         {/* 分離したコンポーネントを配置 */}
         <Field />
-        {/* <Amoeba /> */}
+        <Creature />
       </Canvas>
     </div>
   );
