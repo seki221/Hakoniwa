@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Field from './Field';
 import Creature from './components/Creature';
+import Watersource from './components/Water';
 
 export default function World() {
   return (
@@ -15,6 +16,7 @@ export default function World() {
         {/* 分離したコンポーネントを配置 */}
         <Field />
         <Creature />
+        <Watersource />
       </Canvas>
     </div>
   );
