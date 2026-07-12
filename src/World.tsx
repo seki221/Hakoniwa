@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Field from './Field';
-import Creature from './Creature/Creature';
+import Creature from './components/Creature';
 
 export default function World() {
   return (

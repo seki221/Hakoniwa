@@ -1,4 +1,4 @@
-import World from './components/Simulation/World';
+import World from './World';
 
 export default function App() {
   return (
