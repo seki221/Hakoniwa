@@ -6,6 +6,7 @@ export type Creature = {
   position: THREE.Vector3;
   type: 'CREATURE';
   hp: number;
+  thirst: number;
   hunger: number;
   class: 'GREEN' | 'RED' | 'BLUE';
   state: 'WANDERING' | 'HEADING_TO_WATER';

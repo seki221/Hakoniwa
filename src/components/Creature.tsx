@@ -6,7 +6,7 @@ import type { Creature } from '../ts/creature';
 const FIELD_LIMIT = 7; // 壁の座標
 const SPAWN_COUNT = 20; // 召喚したい数
 
-export default function CreatureWorld() {
+export default function Creature() {
   // 名簿（リスト）を React の State で管理する
   const [creatures, setCreatures] = useState<Creature[]>([]);
 
@@ -24,6 +24,7 @@ export default function CreatureWorld() {
         type: 'CREATURE',
         hp: 100,
         hunger: 100,
+        thirst: 0,
         class: 'GREEN',
         state: 'WANDERING',
       });
