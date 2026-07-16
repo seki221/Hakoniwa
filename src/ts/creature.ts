@@ -8,6 +8,7 @@ export type Creature = {
   hp: number;
   thirst: number;
   hunger: number;
-  class: 'GREEN' | 'RED' | 'BLUE';
+  Affiliation: 'GREEN' | 'RED' | 'BLUE';
   state: 'WANDERING' | 'HEADING_TO_WATER';
+  
 };

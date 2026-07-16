@@ -6,21 +6,44 @@ import type { Watersourcetype} from '../ts/water';
 const SPAWN_COUNT = 3;
 const FIELD_LIMIT = 7;
 
+const isTooClose = (pos1: THREE.Vector3, pos2: THREE.Vector3, minDistance: number): boolean => {
+  const dx = pos1.x - pos2.x;
+  const dz = pos1.z - pos2.z;
+  return Math.sqrt(dx * dx + dz * dz) < minDistance;
+};
+
+
 export default function Watersource() {
   const [watersources, setWatersources] = useState<Watersourcetype[]>([]);
 
   useEffect(() => {
     const initialWatersources: Watersourcetype[] = [];
-
+    const minSpacing = 2.5;
     for (let i = 0; i < SPAWN_COUNT; i++) {
-      const randomX = (Math.random() * 2 - 1) * FIELD_LIMIT;
-      const randomZ = (Math.random() * 2 - 1) * FIELD_LIMIT;
+      let randomX = 0;
+      let randomZ = 0;
+      let candidatePos = new THREE.Vector3();
+      let isOverlap = false;
+      let attempts = 0;
+      const maxAttempts = 100;
+
+      do {
+        randomX = (Math.random() * 2 - 1) * FIELD_LIMIT;
+        randomZ = (Math.random() * 2 - 1) * FIELD_LIMIT;
+        candidatePos.set(randomX, -0.5, randomZ);
+
+        isOverlap = initialWatersources.some((existing) =>
+          isTooClose(candidatePos, existing.position, minSpacing)
+        );
+
+        attempts++;
+      } while (isOverlap && attempts < maxAttempts);
 
       initialWatersources.push({
         id: `watersource_${i}`,
         name: `watersource_${i}`,
-        position: new THREE.Vector3(randomX, 0.5, randomZ),
-        size: [1, 1],
+        position: candidatePos.clone(),
+        size: [2, 2],
         type: 'WATERSOURCE',
         amount: 100,
         state: 'CLEAN',

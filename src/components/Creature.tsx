@@ -3,34 +3,52 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Creature } from '../ts/creature';
 
-const FIELD_LIMIT = 7; // 壁の座標
-const SPAWN_COUNT = 20; // 召喚したい数
+const FIELD_LIMIT = 7;
+const SPAWN_COUNT = 20;
+
+const isTooClose = (pos1: THREE.Vector3, pos2: THREE.Vector3, minDistance: number): boolean => {
+  const dx = pos1.x - pos2.x;
+  const dz = pos1.z - pos2.z;
+  return Math.sqrt(dx * dx + dz * dz) < minDistance;
+};
 
 export default function Creature() {
-  // 名簿（リスト）を React の State で管理する
   const [creatures, setCreatures] = useState<Creature[]>([]);
 
   useEffect(() => {
     const initialCreatures: Creature[] = [];
-
+    const minSpacing = 2.5;
     for (let i = 0; i < SPAWN_COUNT; i++) {
-      const randomX = (Math.random() * 2 - 1) * FIELD_LIMIT;
-      const randomZ = (Math.random() * 2 - 1) * FIELD_LIMIT; 
+      let randomX = 0;
+      let randomZ = 0;
+      let candidatePos = new THREE.Vector3();
+      let isOverlap = false;
+      let attempts = 0;
+      const maxAttempts = 100;
 
+      do {
+      randomX = (Math.random() * 2 - 1) * FIELD_LIMIT;
+      randomZ = (Math.random() * 2 - 1) * FIELD_LIMIT;
+      candidatePos.set(randomX, -0.5, randomZ);
+      isOverlap = initialCreatures.some((existing) =>
+        isTooClose(candidatePos, existing.position, minSpacing)
+      );
+
+      attempts++;
+    } while (isOverlap && attempts < maxAttempts);
       initialCreatures.push({
         id: `creature_${i}`,
         name: `creature_${i}`,
-        position: new THREE.Vector3(randomX, 0, randomZ),
+        position: new THREE.Vector3(randomX, 0.15, randomZ),
         type: 'CREATURE',
         hp: 100,
         hunger: 100,
         thirst: 0,
-        class: 'GREEN',
+        Affiliation: 'GREEN',
         state: 'WANDERING',
       });
     }
 
-    // 作った名簿をStateに登録
     setCreatures(initialCreatures);
   }, []);
 
@@ -43,7 +61,7 @@ export default function Creature() {
     <group>
       {creatures.map((creature) => (
         <mesh key={creature.id} position={creature.position}>
-          <sphereGeometry args={[0.3]} /> {/* 少し小ぶりに 0.3 */}
+          <sphereGeometry args={[0.3]} />
           <meshStandardMaterial color="green" />
         </mesh>
       ))}
