@@ -1,8 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Field from './Field';
-import Creature from './components/Creature';
-import Watersource from './components/Water';
+import SimulationScene from './scene/SimulationScene';
 
 export default function World() {
   return (
@@ -13,10 +12,8 @@ export default function World() {
         <directionalLight position={[10, 10, 5]} />
         <OrbitControls />
 
-        {/* 分離したコンポーネントを配置 */}
         <Field />
-        <Creature />
-        <Watersource />
+        <SimulationScene />
       </Canvas>
     </div>
   );
