@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { Watersourcetype} from '../ts/water';
+import type { Watersourcetype} from '../ts/Watersourcetype';
 
 const SPAWN_COUNT = 3;
 const FIELD_LIMIT = 7;
