@@ -9,3 +9,5 @@
 - [React](https://ja.react.dev)
 - [Three.js](https://threejs.org)
 - [React Three Fiber](https://r3f.docs.pmnd.rs/getting-started/introduction)
+- [React-three/drei]([https://drei.docs.pmnd.rs/getting-started/introduction](https://github.com/pmndrs/drei))
+- [React-three/rapier](https://github.com/pmndrs/react-three-rapier)
