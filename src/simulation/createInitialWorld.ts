@@ -19,7 +19,7 @@ const createWaterSources = (): WaterSource[] => {
       fieldLimit: FIELD_LIMIT,
       minSpacing: MIN_SPACING,
       maxAttempts: MAX_ATTEMPTS,
-      y: -0.5,
+      y: -0.45,
     });
 
     if (!position) {
