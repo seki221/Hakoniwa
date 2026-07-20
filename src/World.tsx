@@ -7,9 +7,10 @@ import SimulationScene from './scene/SimulationScene';
 
 export default function World() {
   return (
-    <div style={{ height: '500px', background: '#f0f0f0' }}>
+    <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', background: '#f0f0f0' }}>
       <Canvas
           shadows
+          style={{ display: 'block' }}
           camera={{
             position: [5, 5, 5],
             fov: 50,
