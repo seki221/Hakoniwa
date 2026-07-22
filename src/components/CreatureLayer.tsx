@@ -10,7 +10,7 @@ export default function CreatureLayer({ creatures }: CreatureLayerProps) {
       {creatures.map((creature) => (
         <mesh key={creature.id} position={creature.position}>
           <sphereGeometry args={[0.3]} />
-          <meshStandardMaterial color="green" />
+          <meshStandardMaterial color="#b3976d" />
         </mesh>
       ))}
     </group>
