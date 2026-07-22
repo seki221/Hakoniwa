@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import type { CreatureState } from '../types/creature';
 import type { WaterSource } from '../types/waterSource';
 import type { WorldState } from '../types/world';
+import {
+  createInitialWanderDirection,
+  createInitialWanderTimer,
+} from './systems/movement';
 import { findSpawnPosition } from './systems/spawning';
 
 const FIELD_LIMIT = 7;
@@ -61,6 +65,8 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       id: `creature_${i}`,
       name: `creature_${i}`,
       position: spawnPosition,
+      wanderDirection: createInitialWanderDirection(),
+      wanderTimer: createInitialWanderTimer(),
       type: 'CREATURE',
       hp: 100,
       hunger: 100,
