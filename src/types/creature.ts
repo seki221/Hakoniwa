@@ -7,6 +7,7 @@ export type CreatureState = {
   id: string;
   name: string;
   position: THREE.Vector3;
+  velocity: THREE.Vector3;
   wanderDirection: THREE.Vector3;
   wanderTimer: number;
   type: 'CREATURE';

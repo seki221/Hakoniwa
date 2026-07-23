@@ -65,6 +65,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       id: `creature_${i}`,
       name: `creature_${i}`,
       position: spawnPosition,
+      velocity: new THREE.Vector3(0, 0, 0),
       wanderDirection: createInitialWanderDirection(),
       wanderTimer: createInitialWanderTimer(),
       type: 'CREATURE',
