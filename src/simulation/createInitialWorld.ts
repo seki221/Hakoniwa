@@ -6,9 +6,9 @@ import {
   createInitialWanderDirection,
   createInitialWanderTimer,
 } from './systems/movement';
+import { FIELD_LIMIT } from './systems/space';
 import { findSpawnPosition } from './systems/spawning';
 
-const FIELD_LIMIT = 7;
 const MIN_SPACING = 2.5;
 const MAX_ATTEMPTS = 100;
 const CREATURE_COUNT = 20;
@@ -68,6 +68,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       velocity: new THREE.Vector3(0, 0, 0),
       wanderDirection: createInitialWanderDirection(),
       wanderTimer: createInitialWanderTimer(),
+      targetWaterSourceId: null,
       type: 'CREATURE',
       hp: 100,
       hunger: 100,

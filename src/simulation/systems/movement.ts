@@ -2,15 +2,14 @@ import * as THREE from 'three';
 import type { CreatureState } from '../../types/creature';
 import type { WaterSource } from '../../types/waterSource';
 import { isTooClose } from './spawning';
+import {
+  FIELD_LIMIT,
+  getWaterSourceInteractionDistance,
+  getXZDistance,
+} from './space';
 
-// 探索領域
-const FIELD_LIMIT = 7;
-// 見た目上の生物半径
-const CREATURE_RADIUS = 0.3;
 // 生物間の隙間
 const CREATURE_MIN_SPACING = 1;
-// 水源の見た目サイズに足す、生物との最低限の余白
-const WATER_SOURCE_CLEARANCE = 0.25;
 // 基本探索速度
 const BASE_WANDER_SPEED = 1.4;
 // 目標速度へどれくらい素早く近づくか。大きいほどキビキビ、小さいほどヌルっと動く。
@@ -44,6 +43,16 @@ type MovementObstacle = {
   minDistance: number;
 };
 
+type MovementOptions = {
+  ignoredObstacleIds?: string[];
+  speedMultiplier?: number;
+};
+
+type MovementConfig = MovementOptions & {
+  nextWanderDirection: THREE.Vector3;
+  nextWanderTimer: number;
+};
+
 // ランダムな進行方向
 const createRandomDirection = (): THREE.Vector3 => {
   const angle = Math.random() * Math.PI * 2;
@@ -67,28 +76,24 @@ const getMovementObstacles = (
   creature: CreatureState,
   creatures: CreatureState[],
   waterSources: WaterSource[],
+  ignoredObstacleIds: Set<string>,
 ): MovementObstacle[] => [
   ...creatures
-    .filter((otherCreature) => otherCreature.id !== creature.id)
+    .filter((otherCreature) =>
+      otherCreature.id !== creature.id && !ignoredObstacleIds.has(otherCreature.id))
     .map((otherCreature) => ({
       id: otherCreature.id,
       position: otherCreature.position,
       minDistance: CREATURE_MIN_SPACING,
     })),
-  ...waterSources.map((waterSource) => ({
-    id: waterSource.id,
-    position: waterSource.position,
-    minDistance:
-      Math.max(...waterSource.size) / 2 + CREATURE_RADIUS + WATER_SOURCE_CLEARANCE,
-  })),
+  ...waterSources
+    .filter((waterSource) => !ignoredObstacleIds.has(waterSource.id))
+    .map((waterSource) => ({
+      id: waterSource.id,
+      position: waterSource.position,
+      minDistance: getWaterSourceInteractionDistance(waterSource),
+    })),
 ];
-
-const getXZDistance = (position: THREE.Vector3, target: THREE.Vector3): number => {
-  const dx = position.x - target.x;
-  const dz = position.z - target.z;
-
-  return Math.sqrt(dx * dx + dz * dz);
-};
 
 const getMinimumClearanceRatio = (
   position: THREE.Vector3,
@@ -212,30 +217,31 @@ export const createInitialWanderDirection = createRandomDirection;
 
 export const createInitialWanderTimer = createDirectionTimer;
 
-// 更新処理
-export const updateWanderingCreature = (
+const getThirstSpeedMultiplier = (creature: CreatureState): number =>
+  creature.thirst >= DEHYDRATED_THIRST
+    ? DEHYDRATED_SPEED_MULTIPLIER
+    : NORMAL_SPEED_MULTIPLIER;
+
+const updateCreatureMovement = (
   creature: CreatureState,
+  desiredDirection: THREE.Vector3,
   creatures: CreatureState[],
   waterSources: WaterSource[],
   delta: number,
+  config: MovementConfig,
 ): CreatureState => {
-  // 方向転換するか判断
-  const shouldChangeDirection = creature.wanderTimer <= 0;
-  const wanderDirection = shouldChangeDirection
-    ? createRandomDirection()
-    : creature.wanderDirection;
-  // タイマーの更新
-  const wanderTimer = shouldChangeDirection
-    ? createDirectionTimer()
-    : creature.wanderTimer - delta;
   // 脱水による速度調整
-  const speedMultiplier = creature.thirst >= DEHYDRATED_THIRST
-    ? DEHYDRATED_SPEED_MULTIPLIER
-    : NORMAL_SPEED_MULTIPLIER;
-  const obstacles = getMovementObstacles(creature, creatures, waterSources);
+  const speedMultiplier = config.speedMultiplier ?? getThirstSpeedMultiplier(creature);
+  const ignoredObstacleIds = new Set(config.ignoredObstacleIds ?? []);
+  const obstacles = getMovementObstacles(
+    creature,
+    creatures,
+    waterSources,
+    ignoredObstacleIds,
+  );
   const steeredDirection = getSteeredDirection(
     creature.position,
-    wanderDirection,
+    desiredDirection,
     obstacles,
   );
   // 目標速度。いきなりこの速度にせず、下のlerpで現在速度から徐々に近づける。
@@ -292,7 +298,69 @@ export const updateWanderingCreature = (
     ...creature,
     position: nextPosition,
     velocity: appliedVelocity,
-    wanderDirection,
-    wanderTimer,
+    wanderDirection: config.nextWanderDirection,
+    wanderTimer: config.nextWanderTimer,
   };
+};
+
+// 更新処理
+export const updateWanderingCreature = (
+  creature: CreatureState,
+  creatures: CreatureState[],
+  waterSources: WaterSource[],
+  delta: number,
+): CreatureState => {
+  // 方向転換するか判断
+  const shouldChangeDirection = creature.wanderTimer <= 0;
+  const wanderDirection = shouldChangeDirection
+    ? createRandomDirection()
+    : creature.wanderDirection;
+  // タイマーの更新
+  const wanderTimer = shouldChangeDirection
+    ? createDirectionTimer()
+    : creature.wanderTimer - delta;
+
+  return updateCreatureMovement(
+    creature,
+    wanderDirection,
+    creatures,
+    waterSources,
+    delta,
+    {
+      nextWanderDirection: wanderDirection,
+      nextWanderTimer: wanderTimer,
+    },
+  );
+};
+
+export const updateCreatureMovingTowardPosition = (
+  creature: CreatureState,
+  targetPosition: THREE.Vector3,
+  creatures: CreatureState[],
+  waterSources: WaterSource[],
+  delta: number,
+  options: MovementOptions = {},
+): CreatureState => {
+  const desiredDirection = targetPosition.clone().sub(creature.position);
+  desiredDirection.y = 0;
+
+  if (desiredDirection.lengthSq() === 0) {
+    return {
+      ...creature,
+      velocity: new THREE.Vector3(0, 0, 0),
+    };
+  }
+
+  return updateCreatureMovement(
+    creature,
+    desiredDirection.normalize(),
+    creatures,
+    waterSources,
+    delta,
+    {
+      ...options,
+      nextWanderDirection: creature.wanderDirection,
+      nextWanderTimer: creature.wanderTimer,
+    },
+  );
 };

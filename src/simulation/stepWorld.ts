@@ -1,8 +1,8 @@
 import type { WorldState } from '../types/world';
-import { updateWanderingCreature } from './systems/movement';
 import { updateThirst } from './systems/thirst';
+import { updateCreatureWaterBehavior } from './systems/waterSeeking';
 
-const ACTIVE_CREATURE_LIMIT = 100;
+const ACTIVE_CREATURE_LIMIT = 1;
 
 const isActiveCreature = (index: number): boolean => index < ACTIVE_CREATURE_LIMIT;
 
@@ -29,7 +29,7 @@ export const stepWorld = (
 
       return [
         ...updatedCreatures,
-        updateWanderingCreature(creature, movementContext, world.waterSources, delta),
+        updateCreatureWaterBehavior(creature, movementContext, world.waterSources, delta),
       ];
     },
     [],
