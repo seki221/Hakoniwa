@@ -32,10 +32,18 @@ const NORMAL_SPEED_MULTIPLIER = 1;
 const DEHYDRATED_THIRST = 80;
 // 脱水気味の速度倍率
 const DEHYDRATED_SPEED_MULTIPLIER = 0.5;
-// 最小方向切り替え時間
-const MIN_DIRECTION_TIME = 1.2;
-// 最大方向切り替え時間
-const MAX_DIRECTION_TIME = 3.2;
+// 最小歩行時間
+const MIN_WALK_TIME = 1.8;
+// 最大歩行時間
+const MAX_WALK_TIME = 4.5;
+// 最小休止時間
+const MIN_PAUSE_TIME = 0.8;
+// 最大休止時間
+const MAX_PAUSE_TIME = 2.4;
+// 歩行後に休止へ入る確率
+const PAUSE_CHANCE = 0.35;
+// 休止時に速度を落とす強さ
+const PAUSE_BRAKING = 4;
 
 type MovementObstacle = {
   id: string;
@@ -59,9 +67,13 @@ const createRandomDirection = (): THREE.Vector3 => {
 
   return new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
 };
-// 方向転換タイマー
-const createDirectionTimer = (): number =>
-  MIN_DIRECTION_TIME + Math.random() * (MAX_DIRECTION_TIME - MIN_DIRECTION_TIME);
+const createZeroDirection = (): THREE.Vector3 => new THREE.Vector3(0, 0, 0);
+
+const createWalkTimer = (): number =>
+  MIN_WALK_TIME + Math.random() * (MAX_WALK_TIME - MIN_WALK_TIME);
+
+const createPauseTimer = (): number =>
+  MIN_PAUSE_TIME + Math.random() * (MAX_PAUSE_TIME - MIN_PAUSE_TIME);
 
 // フィールド外へ出さない処理
 const clampToField = (position: THREE.Vector3): THREE.Vector3 =>
@@ -215,7 +227,7 @@ const getEscapeDirection = (
 
 export const createInitialWanderDirection = createRandomDirection;
 
-export const createInitialWanderTimer = createDirectionTimer;
+export const createInitialWanderTimer = createWalkTimer;
 
 const getThirstSpeedMultiplier = (creature: CreatureState): number =>
   creature.thirst >= DEHYDRATED_THIRST
@@ -286,7 +298,7 @@ const updateCreatureMovement = (
         ? escapeVelocity
         : escapeVelocity.multiplyScalar(BLOCKED_VELOCITY_DAMPING),
       wanderDirection: escapeDirection,
-      wanderTimer: createDirectionTimer(),
+      wanderTimer: createWalkTimer(),
     };
   }
 
@@ -303,6 +315,28 @@ const updateCreatureMovement = (
   };
 };
 
+const isPausedDirection = (direction: THREE.Vector3): boolean => direction.lengthSq() === 0;
+
+const updatePausedCreature = (
+  creature: CreatureState,
+  delta: number,
+  nextWanderTimer: number,
+): CreatureState => {
+  const brakingAmount = 1 - Math.exp(-PAUSE_BRAKING * delta);
+  const velocity = creature.velocity.clone().lerp(createZeroDirection(), brakingAmount);
+  const position = clampToField(
+    creature.position.clone().add(velocity.clone().multiplyScalar(delta)),
+  );
+
+  return {
+    ...creature,
+    position,
+    velocity,
+    wanderDirection: createZeroDirection(),
+    wanderTimer: nextWanderTimer,
+  };
+};
+
 // 更新処理
 export const updateWanderingCreature = (
   creature: CreatureState,
@@ -310,14 +344,22 @@ export const updateWanderingCreature = (
   waterSources: WaterSource[],
   delta: number,
 ): CreatureState => {
-  // 方向転換するか判断
-  const shouldChangeDirection = creature.wanderTimer <= 0;
-  const wanderDirection = shouldChangeDirection
+  const wasPaused = isPausedDirection(creature.wanderDirection);
+  const shouldChooseNextAction = creature.wanderTimer <= 0;
+
+  if (shouldChooseNextAction && !wasPaused && Math.random() < PAUSE_CHANCE) {
+    return updatePausedCreature(creature, delta, createPauseTimer());
+  }
+
+  if (wasPaused && !shouldChooseNextAction) {
+    return updatePausedCreature(creature, delta, creature.wanderTimer - delta);
+  }
+
+  const wanderDirection = shouldChooseNextAction
     ? createRandomDirection()
     : creature.wanderDirection;
-  // タイマーの更新
-  const wanderTimer = shouldChangeDirection
-    ? createDirectionTimer()
+  const wanderTimer = shouldChooseNextAction
+    ? createWalkTimer()
     : creature.wanderTimer - delta;
 
   return updateCreatureMovement(
