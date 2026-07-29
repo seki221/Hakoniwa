@@ -1,7 +1,7 @@
 import type { CreatureState } from '../../types/creature';
 
 const MAX_THIRST = 100;
-const THIRST_RATE = 2;
+const THIRST_RATE = 0.2;
 
 export const updateThirst = (
   creature: CreatureState,
