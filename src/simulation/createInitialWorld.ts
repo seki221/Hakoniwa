@@ -8,42 +8,11 @@ import {
 } from './systems/movement';
 import { FIELD_LIMIT } from './systems/space';
 import { findSpawnPosition } from './systems/spawning';
+import { createInitialWaterSources } from './systems/waterSourceSpawning';
 
 const MIN_SPACING = 2.5;
 const MAX_ATTEMPTS = 100;
 const CREATURE_COUNT = 20;
-const WATER_SOURCE_COUNT = 3;
-
-const createWaterSources = (): WaterSource[] => {
-  const waterSources: WaterSource[] = [];
-  const occupiedPositions: THREE.Vector3[] = [];
-
-  for (let i = 0; i < WATER_SOURCE_COUNT; i++) {
-    const position = findSpawnPosition(occupiedPositions, {
-      fieldLimit: FIELD_LIMIT,
-      minSpacing: MIN_SPACING,
-      maxAttempts: MAX_ATTEMPTS,
-      y: -0.45,
-    });
-
-    if (!position) {
-      continue;
-    }
-
-    waterSources.push({
-      id: `watersource_${i}`,
-      name: `watersource_${i}`,
-      position,
-      size: [2, 2],
-      type: 'WATERSOURCE',
-      amount: 100,
-      state: 'CLEAN',
-    });
-    occupiedPositions.push(position);
-  }
-
-  return waterSources;
-};
 
 const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
   const creatures: CreatureState[] = [];
@@ -83,7 +52,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
 };
 
 export const createInitialWorld = (): WorldState => {
-  const waterSources = createWaterSources();
+  const waterSources = createInitialWaterSources();
   const creatures = createCreatures(waterSources);
 
   return {
