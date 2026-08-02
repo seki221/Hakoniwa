@@ -1,10 +1,10 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from "@react-three/drei";
 import { Field } from './Field';
-// import { Stars } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 import SimulationScene from './scene/SimulationScene';
 export default function World() {
+  const FIELD_SIZE = 300;
   return (
     <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', background: '#f0f0f0' }}>
       <Canvas
@@ -18,7 +18,11 @@ export default function World() {
           }}
         >
         {/* 環境設定（光とカメラ操作） */}
-        <OrbitControls />
+        <OrbitControls
+          minDistance={4}
+          maxDistance={FIELD_SIZE/2 + 5}
+          maxPolarAngle={Math.PI / 2.15}
+        />
           {/* 地面 */}
         <Physics gravity={[0, -9.81, 0]}>
           <Field />
