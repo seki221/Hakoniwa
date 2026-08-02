@@ -1,10 +1,11 @@
 import type { WorldTime } from '../../types/WorldTime';
 
 const MINUTES_PER_DAY = 24 * 60;
-const START_HOUR = 6;
+const START_HOUR = 8;
 const START_MINUTE = 0;
 const START_TOTAL_MINUTES = START_HOUR * 60 + START_MINUTE;
 const DEFAULT_GAME_MINUTES_PER_REAL_SECOND = 10;
+// Real1秒 = ゲーム内n分
 
 const toClockTime = (totalGameMinutes: number) => {
   const day = Math.floor(totalGameMinutes / MINUTES_PER_DAY);
