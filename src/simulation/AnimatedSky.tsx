@@ -1,7 +1,7 @@
 import { Sky } from '@react-three/drei';
 import type { WorldTime } from '../types/WorldTime';
+import { NightStars } from './NightStars';
 import { getDaylightAmount, getSunPosition } from './systems/sky';
-
 type AnimatedSkyProps = {
   time: WorldTime;
 };
@@ -42,6 +42,7 @@ export function AnimatedSky({ time }: AnimatedSkyProps) {
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
+      <NightStars time={time} />
     </>
   );
 }
