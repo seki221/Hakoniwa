@@ -8,6 +8,7 @@ import {
 } from './systems/movement';
 import { FIELD_LIMIT } from './systems/space';
 import { findSpawnPosition } from './systems/spawning';
+import { createInitialWorldTime } from './systems/time';
 import { createInitialWaterSources } from './systems/waterSourceSpawning';
 
 const MIN_SPACING = 2.5;
@@ -58,5 +59,6 @@ export const createInitialWorld = (): WorldState => {
   return {
     creatures,
     waterSources,
+    time: createInitialWorldTime(),
   };
 };

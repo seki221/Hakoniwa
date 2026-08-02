@@ -1,5 +1,6 @@
 import type { WorldState } from '../types/world';
 import { updateThirst } from './systems/thirst';
+import { updateWorldTime } from './systems/time';
 import { updateCreatureWaterBehavior } from './systems/waterSeeking';
 
 const ACTIVE_CREATURE_LIMIT = 1;
@@ -10,6 +11,7 @@ export const stepWorld = (
   world: WorldState,
   delta: number,
 ): WorldState => {
+  const time = updateWorldTime(world.time, delta);
   const thirstyCreatures = world.creatures.map((creature, index) => (
     isActiveCreature(index)
       ? updateThirst(creature, delta)
@@ -37,6 +39,7 @@ export const stepWorld = (
 
   return {
     ...world,
+    time,
     creatures,
   };
 };

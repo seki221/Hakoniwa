@@ -11,7 +11,6 @@ export default function SimulationScene() {
   useFrame((_, delta) => {
     setWorld((currentWorld) => stepWorld(currentWorld, delta));
   });
-
   return (
     <>
       <CreatureLayer creatures={world.creatures} />
