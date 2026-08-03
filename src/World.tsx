@@ -3,8 +3,8 @@ import { OrbitControls } from "@react-three/drei";
 import { Field } from './Field';
 import { Physics } from "@react-three/rapier";
 import SimulationScene from './scene/SimulationScene';
+import { FIELD_SIZE } from './Field';
 export default function World() {
-  const FIELD_SIZE = 300;
   return (
     <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', background: '#f0f0f0' }}>
       <Canvas

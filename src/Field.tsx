@@ -3,7 +3,7 @@ import { useTexture } from "@react-three/drei"
 import { CuboidCollider, RigidBody} from "@react-three/rapier"
 import grass from "./assets/grass.png"
 
-const FIELD_SIZE = 200;
+export const FIELD_SIZE = 200;
 const FIELD_COLLIDER_HALF_SIZE = FIELD_SIZE / 2;
 
 
