@@ -12,7 +12,7 @@ import {
   getXZDistance,
 } from './space';
 
-const SEEK_WATER_THIRST = 15;
+export const SEEK_WATER_THIRST = 15;
 const DRINK_RATE = 10;
 const FULLY_REHYDRATED_THIRST = 0;
 
@@ -158,7 +158,9 @@ export const updateCreatureWaterBehavior = (
   delta: number,
 ): CreatureState => {
   const shouldSeekWater =
-    creature.state !== 'WANDERING' || creature.thirst >= SEEK_WATER_THIRST;
+    creature.state === 'HEADING_TO_WATER'
+    || creature.state === 'DRINKING'
+    || creature.thirst >= SEEK_WATER_THIRST;
 
   if (!shouldSeekWater) {
     return updateWanderingCreature(

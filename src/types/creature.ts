@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export type CreatureFaction = 'GREEN' | 'RED' | 'BLUE';
-export type CreatureBehaviorState = 'WANDERING' | 'HEADING_TO_WATER' | 'DRINKING';
+export type CreatureBehaviorState = 'WANDERING' | 'HEADING_TO_WATER' | 'DRINKING' | 'RESTING';
 
 export type CreatureState = {
   id: string;
@@ -13,6 +13,7 @@ export type CreatureState = {
   targetWaterSourceId: string | null;
   type: 'CREATURE';
   hp: number;
+  stamina: number;
   thirst: number;
   hunger: number;
   affiliation: CreatureFaction;

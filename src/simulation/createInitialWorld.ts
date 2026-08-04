@@ -41,6 +41,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       targetWaterSourceId: null,
       type: 'CREATURE',
       hp: 100,
+      stamina: 100,
       hunger: 100,
       thirst: 0,
       affiliation: 'GREEN',

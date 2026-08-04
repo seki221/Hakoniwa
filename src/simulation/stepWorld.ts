@@ -1,9 +1,15 @@
 import type { WorldState } from '../types/world';
+import {
+  recoverRestingCreature,
+  shouldForceRest,
+  shouldKeepResting,
+  updateStaminaAfterActivity,
+} from './systems/fatigue';
 import { updateThirst } from './systems/thirst';
 import { updateWorldTime } from './systems/time';
-import { updateCreatureWaterBehavior } from './systems/waterSeeking';
+import { SEEK_WATER_THIRST, updateCreatureWaterBehavior } from './systems/waterSeeking';
 
-const ACTIVE_CREATURE_LIMIT = 1;
+const ACTIVE_CREATURE_LIMIT = 20;
 
 const isActiveCreature = (index: number): boolean => index < ACTIVE_CREATURE_LIMIT;
 
@@ -29,10 +35,19 @@ export const stepWorld = (
         ...thirstyCreatures.slice(index + 1),
       ];
 
-      return [
-        ...updatedCreatures,
-        updateCreatureWaterBehavior(creature, movementContext, world.waterSources, delta),
-      ];
+      const shouldRest =
+        creature.thirst < SEEK_WATER_THIRST
+        && (shouldForceRest(creature) || shouldKeepResting(creature));
+      const updatedCreature = shouldRest
+        ? recoverRestingCreature(creature, time, delta)
+        : updateStaminaAfterActivity(
+          creature,
+          updateCreatureWaterBehavior(creature, movementContext, world.waterSources, delta),
+          time,
+          delta,
+        );
+
+      return [...updatedCreatures, updatedCreature];
     },
     [],
   );
