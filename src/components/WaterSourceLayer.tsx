@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { Water as ThreeWater } from 'three/addons/objects/Water.js';
 import waterTextureSrc from '../assets/water.png';
+import { getWaterSourceRadius } from '../simulation/systems/space';
 import type { WaterSource } from '../types/waterSource';
 
 type WaterSourceLayerProps = {
@@ -17,9 +18,10 @@ type WaterSurfaceProps = {
 
 function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
   const waterRef = useRef<ThreeWater | null>(null);
+  const waterRadius = getWaterSourceRadius(waterSource);
   const geometry = useMemo(
-    () => new THREE.PlaneGeometry(waterSource.size[0], waterSource.size[1]),
-    [waterSource.size],
+    () => new THREE.CircleGeometry(waterRadius, 64),
+    [waterRadius],
   );
   const water = useMemo(
     () =>
