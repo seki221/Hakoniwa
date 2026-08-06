@@ -2,9 +2,13 @@ import * as THREE from 'three';
 
 export type SpawnConfig = {
   fieldLimit: number;
-  minSpacing: number;
   maxAttempts: number;
   y: number;
+};
+
+export type SpawnObstacle = {
+  position: THREE.Vector3;
+  minDistance: number;
 };
 
 export const isTooClose = (
@@ -19,15 +23,15 @@ export const isTooClose = (
 };
 
 export const findSpawnPosition = (
-  occupiedPositions: THREE.Vector3[],
+  occupiedAreas: SpawnObstacle[],
   config: SpawnConfig,
 ): THREE.Vector3 | null => {
   for (let attempt = 0; attempt < config.maxAttempts; attempt++) {
     const randomX = (Math.random() * 2 - 1) * config.fieldLimit;
     const randomZ = (Math.random() * 2 - 1) * config.fieldLimit;
     const candidatePos = new THREE.Vector3(randomX, config.y, randomZ);
-    const isOccupied = occupiedPositions.some((position) =>
-      isTooClose(candidatePos, position, config.minSpacing),
+    const isOccupied = occupiedAreas.some((area) =>
+      isTooClose(candidatePos, area.position, area.minDistance),
     );
 
     if (!isOccupied) {

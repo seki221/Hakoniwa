@@ -6,8 +6,11 @@ import {
   createInitialWanderDirection,
   createInitialWanderTimer,
 } from './systems/movement';
-import { FIELD_LIMIT } from './systems/space';
-import { findSpawnPosition } from './systems/spawning';
+import {
+  FIELD_LIMIT,
+  getWaterSourceInteractionDistance,
+} from './systems/space';
+import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
 import { createInitialWorldTime } from './systems/time';
 import { createInitialWaterSources } from './systems/waterSourceSpawning';
 
@@ -17,12 +20,14 @@ const CREATURE_COUNT = 20;
 
 const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
   const creatures: CreatureState[] = [];
-  const occupiedPositions = waterSources.map((waterSource) => waterSource.position.clone());
+  const occupiedAreas: SpawnObstacle[] = waterSources.map((waterSource) => ({
+    position: waterSource.position.clone(),
+    minDistance: getWaterSourceInteractionDistance(waterSource),
+  }));
 
   for (let i = 0; i < CREATURE_COUNT; i++) {
-    const spawnPosition = findSpawnPosition(occupiedPositions, {
+    const spawnPosition = findSpawnPosition(occupiedAreas, {
       fieldLimit: FIELD_LIMIT,
-      minSpacing: MIN_SPACING,
       maxAttempts: MAX_ATTEMPTS,
       y: 0.15,
     });
@@ -47,7 +52,10 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       affiliation: 'GREEN',
       state: 'WANDERING',
     });
-    occupiedPositions.push(spawnPosition);
+    occupiedAreas.push({
+      position: spawnPosition,
+      minDistance: MIN_SPACING,
+    });
   }
 
   return creatures;
