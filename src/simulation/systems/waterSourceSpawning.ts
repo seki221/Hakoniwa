@@ -20,6 +20,8 @@ export const createInitialWaterSources = (): WaterSource[] =>
     name: waterSource.id,
     position: new THREE.Vector3(waterSource.x, WATER_SOURCE_Y, waterSource.z),
     size: waterSource.size,
+    terrainKind: 'POND',
+    depth: 1.5,
     type: 'WATERSOURCE',
     amount: 100,
     state: 'CLEAN',

@@ -4,6 +4,8 @@ import type { WaterSource } from '../../types/waterSource';
 import { isTooClose } from './spawning';
 import {
   FIELD_LIMIT,
+  CREATURE_GROUND_Y,
+  getCreatureHeightAtPosition,
   getWaterSourceInteractionDistance,
   getXZDistance,
 } from './space';
@@ -28,6 +30,8 @@ const FIELD_EDGE_MARGIN = 1.2;
 const FIELD_EDGE_AVOIDANCE_WEIGHT = 1.6;
 // 通常時の速度倍率
 const NORMAL_SPEED_MULTIPLIER = 1;
+// 水中では歩行時より抵抗を受ける
+const WATER_SPEED_MULTIPLIER = 0.55;
 // 脱水気味とみなす喉の渇き
 const DEHYDRATED_THIRST = 80;
 // 脱水気味の速度倍率
@@ -266,6 +270,7 @@ const updateCreatureMovement = (
   const rawNextPosition = creature.position.clone().add(velocity.clone().multiplyScalar(delta));
   const nextPosition = clampToField(rawNextPosition);
   const hitFieldEdge = !nextPosition.equals(rawNextPosition);
+  nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterSources);
   // 衝突判定
   const isBlocked = isMovingCloserToBlockedArea(
     creature.position,
@@ -285,6 +290,7 @@ const updateCreatureMovement = (
     const escapePosition = clampToField(
       creature.position.clone().add(escapeVelocity.clone().multiplyScalar(delta)),
     );
+    escapePosition.y = getCreatureHeightAtPosition(escapePosition, waterSources);
     const currentClearance = getMinimumClearanceRatio(creature.position, obstacles);
     const escapeClearance = getMinimumClearanceRatio(escapePosition, obstacles);
     const canEscape =
@@ -300,6 +306,15 @@ const updateCreatureMovement = (
       wanderDirection: escapeDirection,
       wanderTimer: createWalkTimer(),
     };
+  }
+
+  const inWater = nextPosition.y < CREATURE_GROUND_Y;
+  if (inWater) {
+    velocity.multiplyScalar(WATER_SPEED_MULTIPLIER);
+    nextPosition.copy(clampToField(
+      creature.position.clone().add(velocity.clone().multiplyScalar(delta)),
+    ));
+    nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterSources);
   }
 
   const appliedVelocity = hitFieldEdge && delta > 0

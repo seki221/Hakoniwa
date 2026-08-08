@@ -8,7 +8,7 @@ import {
   updateWanderingCreature,
 } from './movement';
 import {
-  getWaterSourceInteractionDistance,
+  getWaterSourceRadius,
   getXZDistance,
 } from './space';
 
@@ -60,7 +60,7 @@ const isAtWaterSource = (
   waterSource: WaterSource,
 ): boolean =>
   getXZDistance(creature.position, waterSource.position)
-    <= getWaterSourceInteractionDistance(waterSource);
+    <= getWaterSourceRadius(waterSource) - 0.1;
 
 const getWaterApproachPosition = (
   creature: CreatureState,
@@ -78,7 +78,7 @@ const getWaterApproachPosition = (
     .add(
       directionFromWater
         .normalize()
-        .multiplyScalar(getWaterSourceInteractionDistance(waterSource)),
+        .multiplyScalar(Math.max(0, getWaterSourceRadius(waterSource) - 0.2)),
     );
 };
 

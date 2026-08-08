@@ -4,6 +4,7 @@ import type { WaterSource } from '../../types/waterSource';
 export const FIELD_LIMIT = 20;
 export const CREATURE_RADIUS = 0.3;
 export const WATER_SOURCE_CLEARANCE = 0.25;
+export const CREATURE_GROUND_Y = CREATURE_RADIUS;
 
 export const getXZDistance = (
   position: THREE.Vector3,
@@ -24,3 +25,24 @@ export const getWaterSourceInteractionDistance = (
   waterSource: WaterSource,
 ): number =>
   getWaterSourceRadius(waterSource) + CREATURE_RADIUS + WATER_SOURCE_CLEARANCE;
+
+export const isInsideWaterSource = (
+  position: THREE.Vector3,
+  waterSource: WaterSource,
+): boolean =>
+  getXZDistance(position, waterSource.position) < getWaterSourceRadius(waterSource);
+
+/** 水面に入った個体を浮かせず、浅瀬では身体の半分ほどを水面下へ沈める。 */
+export const getCreatureHeightAtPosition = (
+  position: THREE.Vector3,
+  waterSources: WaterSource[],
+): number => {
+  const waterSource = waterSources.find((water) => isInsideWaterSource(position, water));
+
+  if (!waterSource) {
+    return CREATURE_GROUND_Y;
+  }
+
+  const visibleHeight = Math.min(CREATURE_RADIUS * 0.45, waterSource.depth);
+  return waterSource.position.y + visibleHeight;
+};

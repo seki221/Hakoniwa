@@ -8,6 +8,7 @@ import {
 } from './systems/movement';
 import {
   FIELD_LIMIT,
+  CREATURE_GROUND_Y,
   getWaterSourceInteractionDistance,
 } from './systems/space';
 import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
@@ -29,7 +30,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
     const spawnPosition = findSpawnPosition(occupiedAreas, {
       fieldLimit: FIELD_LIMIT,
       maxAttempts: MAX_ATTEMPTS,
-      y: 0.15,
+      y: CREATURE_GROUND_Y,
     });
 
     if (!spawnPosition) {
