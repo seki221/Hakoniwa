@@ -3,6 +3,16 @@ import * as THREE from 'three';
 export type CreatureFaction = 'GREEN' | 'RED' | 'BLUE';
 export type CreatureBehaviorState = 'WANDERING' | 'HEADING_TO_WATER' | 'DRINKING' | 'RESTING';
 
+export type CreatureStaminaProfile = {
+  maxStamina: number;
+  forcedRestRatio: number;
+  restedRatio: number;
+  daytimeDistanceCost: number;
+  daytimeSpeedCost: number;
+  nightRecoveryRate: number;
+  restRecoveryRate: number;
+};
+
 export type CreatureState = {
   id: string;
   name: string;
@@ -14,6 +24,7 @@ export type CreatureState = {
   type: 'CREATURE';
   hp: number;
   stamina: number;
+  staminaProfile: CreatureStaminaProfile;
   thirst: number;
   hunger: number;
   affiliation: CreatureFaction;

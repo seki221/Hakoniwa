@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { CreatureState } from '../../types/creature';
-import type { WaterSource } from '../../types/waterSource';
+import { isDrinkableWaterSource, type WaterSource } from '../../types/waterSource';
 import {
   createInitialWanderDirection,
   createInitialWanderTimer,
@@ -8,7 +8,7 @@ import {
   updateWanderingCreature,
 } from './movement';
 import {
-  getWaterSourceRadius,
+  getWaterSourceInteractionDistance,
   getXZDistance,
 } from './space';
 
@@ -16,14 +16,11 @@ export const SEEK_WATER_THIRST = 15;
 const DRINK_RATE = 10;
 const FULLY_REHYDRATED_THIRST = 0;
 
-const isAvailableWaterSource = (waterSource: WaterSource): boolean =>
-  waterSource.amount > 0 && waterSource.state !== 'DRY';
-
 const findNearestWaterSource = (
   creature: CreatureState,
   waterSources: WaterSource[],
 ): WaterSource | null => {
-  const availableWaterSources = waterSources.filter(isAvailableWaterSource);
+  const availableWaterSources = waterSources.filter(isDrinkableWaterSource);
 
   if (availableWaterSources.length === 0) {
     return null;
@@ -50,7 +47,7 @@ const getTargetWaterSource = (
   waterSources: WaterSource[],
 ): WaterSource | null => {
   const currentTargetWaterSource = waterSources.find((waterSource) =>
-    waterSource.id === creature.targetWaterSourceId && isAvailableWaterSource(waterSource));
+    waterSource.id === creature.targetWaterSourceId && isDrinkableWaterSource(waterSource));
 
   return currentTargetWaterSource ?? findNearestWaterSource(creature, waterSources);
 };
@@ -60,7 +57,7 @@ const isAtWaterSource = (
   waterSource: WaterSource,
 ): boolean =>
   getXZDistance(creature.position, waterSource.position)
-    <= getWaterSourceRadius(waterSource) - 0.1;
+    <= getWaterSourceInteractionDistance(waterSource);
 
 const getWaterApproachPosition = (
   creature: CreatureState,
@@ -78,7 +75,7 @@ const getWaterApproachPosition = (
     .add(
       directionFromWater
         .normalize()
-        .multiplyScalar(Math.max(0, getWaterSourceRadius(waterSource) - 0.2)),
+        .multiplyScalar(getWaterSourceInteractionDistance(waterSource)),
     );
 };
 

@@ -12,6 +12,7 @@ import {
   getWaterSourceInteractionDistance,
 } from './systems/space';
 import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
+import { createInitialStaminaProfile } from './systems/fatigue';
 import { createInitialWorldTime } from './systems/time';
 import { createInitialWaterSources } from './systems/waterSourceSpawning';
 
@@ -37,6 +38,8 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       continue;
     }
 
+    const staminaProfile = createInitialStaminaProfile(i);
+
     creatures.push({
       id: `creature_${i}`,
       name: `creature_${i}`,
@@ -47,7 +50,8 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       targetWaterSourceId: null,
       type: 'CREATURE',
       hp: 100,
-      stamina: 100,
+      stamina: staminaProfile.maxStamina,
+      staminaProfile,
       hunger: 100,
       thirst: 0,
       affiliation: 'GREEN',
