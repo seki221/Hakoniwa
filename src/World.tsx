@@ -20,8 +20,8 @@ export default function World() {
         {/* 環境設定（光とカメラ操作） */}
         <OrbitControls
           minDistance={4}
-          maxDistance={FIELD_SIZE/2 + 5}
-          maxPolarAngle={Math.PI / 2.15}
+          maxDistance={FIELD_SIZE+ 5}
+          maxPolarAngle={Math.PI}
         />
           {/* 地面 */}
         <Physics gravity={[0, -9.81, 0]}>
