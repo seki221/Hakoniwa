@@ -16,19 +16,42 @@ const SKY_GRADIENT_VERTEX_SHADER = `
 `;
 
 const SKY_GRADIENT_FRAGMENT_SHADER = `
-  uniform vec3 zenithColor;
-  uniform vec3 horizonColor;
-  uniform vec3 lowerColor;
+  uniform vec3 baseTopColor;
+  uniform vec3 baseHorizonColor;
+  uniform vec3 baseBottomColor;
+  uniform vec3 dayTopColor;
+  uniform vec3 dayHorizonColor;
+  uniform vec3 dayBottomColor;
   uniform vec3 glowColor;
   uniform float glowAmount;
+  uniform float dayLayerAmount;
   varying vec3 vDirection;
+
+  vec3 getSkyColor(vec3 topColor, vec3 horizonColor, vec3 bottomColor, float height) {
+    float horizonBlend = smoothstep(0.08, 0.62, height);
+    float bottomBlend = smoothstep(0.0, 0.3, height);
+    vec3 bottomToHorizon = mix(bottomColor, horizonColor, bottomBlend);
+
+    return mix(bottomToHorizon, topColor, horizonBlend);
+  }
 
   void main() {
     float height = clamp(vDirection.y * 0.5 + 0.5, 0.0, 1.0);
-    float horizonBlend = smoothstep(0.08, 0.62, height);
-    float lowerBlend = smoothstep(0.0, 0.3, height);
-    vec3 lowerToHorizon = mix(lowerColor, horizonColor, lowerBlend);
-    vec3 skyColor = mix(lowerToHorizon, zenithColor, horizonBlend);
+    vec3 baseSkyColor = getSkyColor(
+      baseTopColor,
+      baseHorizonColor,
+      baseBottomColor,
+      height
+    );
+    vec3 daySkyColor = getSkyColor(
+      dayTopColor,
+      dayHorizonColor,
+      dayBottomColor,
+      height
+    );
+    float dayLayerEdge = 1.2 - dayLayerAmount * 1.4;
+    float verticalDayLayer = smoothstep(dayLayerEdge - 0.18, dayLayerEdge + 0.18, height);
+    vec3 skyColor = mix(baseSkyColor, daySkyColor, verticalDayLayer);
     float horizonGlow = exp(-abs(vDirection.y) * 5.0) * glowAmount;
 
     skyColor = mix(skyColor, glowColor, horizonGlow);
@@ -39,29 +62,39 @@ const SKY_GRADIENT_FRAGMENT_SHADER = `
 type SkyGradientProps = {
   time: WorldTime;
 };
-// 夜中の？
-const NIGHT_LOWER = new THREE.Color('#00030a');
-// 夜の最高点？
-const NIGHT_ZENITH = new THREE.Color('#010512');
-// 夜の地平線？
-const NIGHT_HORIZON = new THREE.Color('#07111f');
 
-// 夜明けの最高点？紺
-const DAWN_ZENITH = new THREE.Color('#14203a');
-// 夕暮れの最高点？紺
-const DUSK_ZENITH = new THREE.Color('#1b1730');
+type SkyPalette = {
+  /** 画面上側・頭上側の空色。 */
+  top: THREE.Color;
+  /** 地平線に近い帯の色。朝焼け/夕焼けは主にここに出す。 */
+  horizon: THREE.Color;
+  /** 画面下側の空色。カメラ角度が低い時の黒浮きを抑えるために使う。 */
+  bottom: THREE.Color;
+};
 
-// 夕暮れの地平線？オレンジ
-const DUSK_HORIZON = new THREE.Color('#f0690a');
-// 夜明けの地平線？薄いオレンジ？
-const DAWN_HORIZON = new THREE.Color('#e18a72');
+const NIGHT_SKY: SkyPalette = {
+  top: new THREE.Color('#010512'),
+  horizon: new THREE.Color('#07111f'),
+  bottom: new THREE.Color('#00030a'),
+};
 
-// 日中の…？灰みの青系
-const DAY_LOWER = new THREE.Color('#86bfd6');
-// 日中の最高点？明るい青紫
-const DAY_ZENITH = new THREE.Color('#5fb2ff');
-// 日中の地平線？淡い青
-const DAY_HORIZON = new THREE.Color('#c5eaff');
+const DAWN_SKY: SkyPalette = {
+  top: new THREE.Color('#14203a'),
+  horizon: new THREE.Color('#e18a72'),
+  bottom: NIGHT_SKY.horizon,
+};
+
+const DUSK_SKY: SkyPalette = {
+  top: new THREE.Color('#1b1730'),
+  horizon: new THREE.Color('#f0690a'),
+  bottom: NIGHT_SKY.horizon,
+};
+
+const DAY_SKY: SkyPalette = {
+  top: new THREE.Color('#5fb2ff'),
+  horizon: new THREE.Color('#c5eaff'),
+  bottom: new THREE.Color('#86bfd6'),
+};
 
 const mixColor = (
   from: THREE.Color,
@@ -70,27 +103,32 @@ const mixColor = (
 ): THREE.Color =>
   from.clone().lerp(to, Math.max(0, Math.min(1, amount)));
 
+const mixPalette = (
+  from: SkyPalette,
+  to: SkyPalette,
+  amount: number,
+): SkyPalette => ({
+  top: mixColor(from.top, to.top, amount),
+  horizon: mixColor(from.horizon, to.horizon, amount),
+  bottom: mixColor(from.bottom, to.bottom, amount),
+});
+
 const getSkyGradientColors = (time: WorldTime) => {
   const daylight = getDaylightAmount(time);
   const isEvening = time.hour >= 12;
-  const twilightZenith = isEvening ? DUSK_ZENITH : DAWN_ZENITH;
-  const twilightHorizon = isEvening ? DUSK_HORIZON : DAWN_HORIZON;
+  const twilightSky = isEvening ? DUSK_SKY : DAWN_SKY;
   const nightToTwilight = Math.min(1, daylight / 0.45);
-  const twilightToDay = Math.max(0, Math.min(1, (daylight - 0.45) / 0.5));
-  const zenith = daylight < 0.45
-    ? mixColor(NIGHT_ZENITH, twilightZenith, nightToTwilight)
-    : mixColor(twilightZenith, DAY_ZENITH, twilightToDay);
-  const horizon = daylight < 0.45
-    ? mixColor(NIGHT_HORIZON, twilightHorizon, nightToTwilight)
-    : mixColor(twilightHorizon, DAY_HORIZON, twilightToDay);
-  const lower = mixColor(NIGHT_LOWER, DAY_LOWER, Math.min(1, daylight / 0.9));
+  const dayLayerAmount = Math.max(0, Math.min(1, (daylight - 0.45) / 0.5));
+  const baseSky = daylight < 0.45
+    ? mixPalette(NIGHT_SKY, twilightSky, nightToTwilight)
+    : twilightSky;
 
   return {
-    zenith,
-    horizon,
-    lower,
-    glow: twilightHorizon,
+    baseSky,
+    daySky: DAY_SKY,
+    glow: twilightSky.horizon,
     glowAmount: Math.max(0, 1 - Math.abs(daylight - 0.38) / 0.42),
+    dayLayerAmount,
   };
 };
 
@@ -112,11 +150,15 @@ export function SkyGradient({ time }: SkyGradientProps) {
       return;
     }
 
-    materialRef.current.uniforms.zenithColor.value.copy(colors.zenith);
-    materialRef.current.uniforms.horizonColor.value.copy(colors.horizon);
-    materialRef.current.uniforms.lowerColor.value.copy(colors.lower);
+    materialRef.current.uniforms.baseTopColor.value.copy(colors.baseSky.top);
+    materialRef.current.uniforms.baseHorizonColor.value.copy(colors.baseSky.horizon);
+    materialRef.current.uniforms.baseBottomColor.value.copy(colors.baseSky.bottom);
+    materialRef.current.uniforms.dayTopColor.value.copy(colors.daySky.top);
+    materialRef.current.uniforms.dayHorizonColor.value.copy(colors.daySky.horizon);
+    materialRef.current.uniforms.dayBottomColor.value.copy(colors.daySky.bottom);
     materialRef.current.uniforms.glowColor.value.copy(colors.glow);
     materialRef.current.uniforms.glowAmount.value = colors.glowAmount;
+    materialRef.current.uniforms.dayLayerAmount.value = colors.dayLayerAmount;
   });
 
   return (
@@ -128,11 +170,15 @@ export function SkyGradient({ time }: SkyGradientProps) {
           vertexShader={SKY_GRADIENT_VERTEX_SHADER}
           fragmentShader={SKY_GRADIENT_FRAGMENT_SHADER}
           uniforms={{
-            zenithColor: { value: colors.zenith },
-            horizonColor: { value: colors.horizon },
-            lowerColor: { value: colors.lower },
+            baseTopColor: { value: colors.baseSky.top },
+            baseHorizonColor: { value: colors.baseSky.horizon },
+            baseBottomColor: { value: colors.baseSky.bottom },
+            dayTopColor: { value: colors.daySky.top },
+            dayHorizonColor: { value: colors.daySky.horizon },
+            dayBottomColor: { value: colors.daySky.bottom },
             glowColor: { value: colors.glow },
             glowAmount: { value: colors.glowAmount },
+            dayLayerAmount: { value: colors.dayLayerAmount },
           }}
           depthTest={false}
           depthWrite={false}

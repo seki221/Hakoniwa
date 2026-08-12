@@ -1,4 +1,3 @@
-import { Sky } from '@react-three/drei';
 import * as THREE from 'three';
 import type { WorldTime } from '../types/WorldTime';
 import { Moon } from './Moon';
@@ -61,17 +60,6 @@ export function AnimatedSky({ time }: AnimatedSkyProps) {
         color={daylight < 0.5 ? '#ff9f70' : '#ffffff'}
         castShadow
       />
-      {daylight > 0.92 && (
-        <Sky
-          distance={450000}
-          sunPosition={sunPosition}
-          turbidity={7}
-          rayleigh={2}
-          mieCoefficient={0.005}
-          mieDirectionalG={0.8}
-        />
-        
-      )}
       <NightStars time={time} />
       <Moon time={time} />
     </>
