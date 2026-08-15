@@ -8,6 +8,7 @@ import {
 import { updateThirst } from './systems/thirst';
 import { updateWorldTime } from './systems/time';
 import { SEEK_WATER_THIRST, updateCreatureWaterBehavior } from './systems/waterSeeking';
+import { updateWaterSources } from './systems/waterSourceLifecycle';
 
 const ACTIVE_CREATURE_LIMIT = 20;
 
@@ -52,9 +53,12 @@ export const stepWorld = (
     [],
   );
 
+  const waterSources = updateWaterSources(world.waterSources, creatures, delta);
+
   return {
     ...world,
     time,
     creatures,
+    waterSources,
   };
 };

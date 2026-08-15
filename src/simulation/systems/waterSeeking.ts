@@ -13,7 +13,7 @@ import {
 } from './space';
 
 export const SEEK_WATER_THIRST = 15;
-const DRINK_RATE = 10;
+export const DRINK_RATE = 10;
 const FULLY_REHYDRATED_THIRST = 0;
 
 const findNearestWaterSource = (
