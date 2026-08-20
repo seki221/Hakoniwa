@@ -53,7 +53,7 @@ export const stepWorld = (
     [],
   );
 
-  const waterSources = updateWaterSources(world.waterSources, creatures, delta);
+  const waterSources = updateWaterSources(world.waterSources, creatures, time, delta);
 
   return {
     ...world,
