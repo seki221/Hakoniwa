@@ -10,7 +10,7 @@ import { DRINK_RATE } from './waterSeeking';
 const WATER_SOURCE_Y = 0.02;
 const SPRING_FIELD_LIMIT = FIELD_LIMIT - 2;
 const SPRING_RESPAWN_CHANCE_PER_SECOND = 0.06;
-const SPRING_RESPAWN_AMOUNT = 24;
+const SPRING_RESPAWN_CAPACITY = 24;
 const SPRING_MIN_SPACING = 3.2;
 const MAX_RESPAWN_ATTEMPTS = 100;
 const BASE_SPRING_EVAPORATION_RATE = 0.035;
@@ -128,7 +128,8 @@ const respawnSpring = (
     position: new THREE.Vector3(position.x, WATER_SOURCE_Y, position.z),
     terrainKind,
     depth: terrainKind === 'MARSH' ? 0.35 : 1.5,
-    amount: state === 'CLEAN' ? SPRING_RESPAWN_AMOUNT : SPRING_RESPAWN_AMOUNT * 0.5,
+    capacity: SPRING_RESPAWN_CAPACITY,
+    amount: state === 'CLEAN' ? SPRING_RESPAWN_CAPACITY : SPRING_RESPAWN_CAPACITY * 0.5,
     state,
   };
 };

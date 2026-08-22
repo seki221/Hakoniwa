@@ -16,6 +16,7 @@ const SPRING_COUNT = 7;
 const SPRING_FIELD_LIMIT = FIELD_LIMIT - 2;
 const SPRING_MIN_SPACING = 3.2;
 const SPRING_SIZE: [number, number] = [1.4, 1.4];
+const SPRING_CAPACITY = 24;
 
 const FIXED_WATER_SOURCE_LAYOUT = [
   { id: 'watersource_lake_0', x: -5, z: -5, size: [20, 20] },
@@ -32,6 +33,7 @@ const createWaterSource = (
   size: [number, number],
   terrainKind: WaterTerrainKind,
   state: WaterSourceState,
+  capacity: number,
   amount: number,
 ): WaterSource => ({
   id,
@@ -41,6 +43,7 @@ const createWaterSource = (
   terrainKind,
   depth: terrainKind === 'MARSH' ? 0.35 : 1.5,
   type: 'WATERSOURCE',
+  capacity,
   amount,
   state,
 });
@@ -53,6 +56,7 @@ const createFixedWaterSources = (): WaterSource[] =>
       waterSource.size,
       'POND',
       'CLEAN',
+      100,
       100,
     ));
 
@@ -91,7 +95,8 @@ const createSpringWaterSources = (
       SPRING_SIZE,
       terrainKind,
       state,
-      state === 'CLEAN' ? 24 : 12,
+      SPRING_CAPACITY,
+      state === 'CLEAN' ? SPRING_CAPACITY : SPRING_CAPACITY * 0.5,
     );
 
     springs.push(spring);

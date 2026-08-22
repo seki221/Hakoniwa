@@ -16,9 +16,19 @@ type WaterSurfaceProps = {
   waterNormals: THREE.Texture;
 };
 
+const getWaterFillRatio = (waterSource: WaterSource): number => {
+  if (waterSource.capacity <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(1, waterSource.amount / waterSource.capacity));
+};
+
 function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
   const waterRef = useRef<ThreeWater | null>(null);
   const waterRadius = getWaterSourceRadius(waterSource);
+  const fillRatio = getWaterFillRatio(waterSource);
+  const waterScale = Math.sqrt(fillRatio);
   const geometry = useMemo(
     () => new THREE.CircleGeometry(waterRadius, 64),
     [waterRadius],
@@ -61,6 +71,7 @@ function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
       ref={waterRef}
       position={waterSource.position}
       rotation-x={-Math.PI / 2}
+      scale={[waterScale, waterScale, 1]}
     />
   );
 }
@@ -81,13 +92,15 @@ export default function WaterSourceLayer({ waterSources }: WaterSourceLayerProps
 
   return (
     <group>
-      {waterSources.map((waterSource) => (
-        <WaterSurface
-          key={waterSource.id}
-          waterSource={waterSource}
-          waterNormals={waterNormals}
-        />
-      ))}
+      {waterSources
+        .filter((waterSource) => waterSource.state !== 'DRY' && waterSource.amount > 0)
+        .map((waterSource) => (
+          <WaterSurface
+            key={waterSource.id}
+            waterSource={waterSource}
+            waterNormals={waterNormals}
+          />
+        ))}
     </group>
   );
 }

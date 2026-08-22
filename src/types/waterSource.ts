@@ -18,10 +18,11 @@ export type WaterSource = {
   name: string;
   position: THREE.Vector3;
   size: [number, number];
-  /** 水域の地形分類。amount は将来の水循環で増減する現在水量。 */
+  /** 水域の地形分類。capacity は最大水量、amount は現在水量。 */
   terrainKind: WaterTerrainKind;
   depth: number;
   type: 'WATERSOURCE';
+  capacity: number;
   amount: number;
   state: WaterSourceState;
 };
