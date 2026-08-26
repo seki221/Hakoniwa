@@ -1,20 +1,17 @@
-import { useState } from 'react';
-import { useFrame } from '@react-three/fiber';
 import { Cloud } from '@react-three/drei';
 import CreatureLayer from '../components/CreatureLayer';
 import WaterSourceLayer from '../components/WaterSourceLayer';
-import { createInitialWorld } from '../simulation/createInitialWorld';
-import { stepWorld } from '../simulation/stepWorld';
 import { AnimatedSky } from '../simulation/AnimatedSky';
 import { getDaylightAmount } from '../simulation/systems/sky';
+import type { WorldState } from '../types/world';
 
-export default function SimulationScene() {
-  const [world, setWorld] = useState(createInitialWorld);
+type SimulationSceneProps = {
+  world: WorldState;
+};
+
+export default function SimulationScene({ world }: SimulationSceneProps) {
   const daylight = getDaylightAmount(world.time);
 
-  useFrame((_, delta) => {
-    setWorld((currentWorld) => stepWorld(currentWorld, delta));
-  });
   return (
     <>
       <AnimatedSky time={world.time} />

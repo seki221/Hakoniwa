@@ -1,9 +1,35 @@
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from "@react-three/drei";
+import { useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import { Field } from './Field';
-import { Physics } from "@react-three/rapier";
+import { Physics } from '@react-three/rapier';
 import SimulationScene from './scene/SimulationScene';
 import { FIELD_SIZE } from './Field';
+import { createInitialWorld } from './simulation/createInitialWorld';
+import { stepWorld } from './simulation/stepWorld';
+
+function WorldScene() {
+  const [world, setWorld] = useState(createInitialWorld);
+
+  useFrame((_, delta) => {
+    setWorld((currentWorld) => stepWorld(currentWorld, delta));
+  });
+
+  return (
+    <>
+      <OrbitControls
+        minDistance={4}
+        maxDistance={FIELD_SIZE + 5}
+        maxPolarAngle={Math.PI}
+      />
+      <Physics gravity={[0, -9.81, 0]}>
+        <Field waterSources={world.waterSources} />
+      </Physics>
+      <SimulationScene world={world} />
+    </>
+  );
+}
+
 export default function World() {
   return (
     <div style={{ width: '100vw', height: '100dvh', overflow: 'hidden', background: '#f0f0f0' }}>
@@ -17,17 +43,7 @@ export default function World() {
             far: 2000,
           }}
         >
-        {/* 環境設定（光とカメラ操作） */}
-        <OrbitControls
-          minDistance={4}
-          maxDistance={FIELD_SIZE+ 5}
-          maxPolarAngle={Math.PI}
-        />
-          {/* 地面 */}
-        <Physics gravity={[0, -9.81, 0]}>
-          <Field />
-        </Physics>
-        <SimulationScene />
+        <WorldScene />
       </Canvas>
     </div>
   );

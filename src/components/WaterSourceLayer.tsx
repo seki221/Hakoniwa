@@ -15,10 +15,6 @@ type WaterSurfaceProps = {
   waterNormals: THREE.Texture;
 };
 
-type WaterBasinProps = {
-  waterSource: WaterSource;
-};
-
 const getWaterFillRatio = (waterSource: WaterSource): number => {
   if (waterSource.capacity <= 0) {
     return 0;
@@ -32,40 +28,6 @@ const getWaterSurfaceY = (waterSource: WaterSource): number => {
 
   return waterSource.position.y - waterSource.depth * (1 - fillRatio) * 0.55;
 };
-
-function WaterBasin({ waterSource }: WaterBasinProps) {
-  const bottomY = waterSource.position.y - waterSource.depth;
-  const wallY = waterSource.position.y - waterSource.depth / 2;
-  const xRadius = waterSource.size[0] / 2;
-  const zRadius = waterSource.size[1] / 2;
-  const basinColor = waterSource.terrainKind === 'MARSH' ? '#4a5533' : '#214954';
-  const wallColor = waterSource.terrainKind === 'MARSH' ? '#667143' : '#566348';
-
-  return (
-    <group position={waterSource.position}>
-      <mesh
-        receiveShadow
-        position={[0, bottomY - waterSource.position.y, 0]}
-        rotation-x={-Math.PI / 2}
-        scale={[xRadius, zRadius, 1]}
-      >
-        <circleGeometry args={[1, 64]} />
-        <meshStandardMaterial color={basinColor} roughness={0.95} />
-      </mesh>
-
-      <mesh position={[0, wallY - waterSource.position.y, 0]} scale={[xRadius, 1, zRadius]}>
-        <cylinderGeometry args={[1, 1, waterSource.depth, 64, 1, true]} />
-        <meshStandardMaterial
-          color={wallColor}
-          roughness={0.9}
-          side={THREE.DoubleSide}
-          transparent
-          opacity={0.72}
-        />
-      </mesh>
-    </group>
-  );
-}
 
 function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
   const waterRef = useRef<ThreeWater | null>(null);
@@ -141,9 +103,6 @@ export default function WaterSourceLayer({ waterSources }: WaterSourceLayerProps
 
   return (
     <group>
-      {waterSources.map((waterSource) => (
-        <WaterBasin key={`${waterSource.id}-basin`} waterSource={waterSource} />
-      ))}
       {waterSources
         .filter((waterSource) => waterSource.state !== 'DRY' && waterSource.amount > 0)
         .map((waterSource) => (
