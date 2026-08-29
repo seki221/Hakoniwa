@@ -1,10 +1,15 @@
 import { memo, useEffect, useMemo } from 'react';
-import { CuboidCollider, RigidBody } from '@react-three/rapier';
-import { createTerrainMesh } from './simulation/systems/terrainMesh';
+import { MeshCollider, RigidBody } from '@react-three/rapier';
+import {
+  createTerrainMesh,
+  TERRAIN_CELL_SIZE,
+  TERRAIN_MAX_HEIGHT,
+  TERRAIN_MIN_HEIGHT,
+  TERRAIN_SIZE,
+} from './simulation/systems/terrainMesh';
 import type { WaterSource } from './types/waterSource';
 
-export const FIELD_SIZE = 200;
-const FIELD_COLLIDER_HALF_SIZE = FIELD_SIZE / 2;
+export const FIELD_SIZE = TERRAIN_SIZE;
 
 type FieldProps = {
   waterSources: WaterSource[];
@@ -27,9 +32,9 @@ const getWaterTerrainShapeKey = (waterSources: WaterSource[]): string =>
 function FieldComponent({ waterSources }: FieldProps) {
   const terrain = useMemo(() => createTerrainMesh({
     size: FIELD_SIZE,
-    cellSize: 2,
-    minHeight: -0.4,
-    maxHeight: 0.6,
+    cellSize: TERRAIN_CELL_SIZE,
+    minHeight: TERRAIN_MIN_HEIGHT,
+    maxHeight: TERRAIN_MAX_HEIGHT,
     waterSources,
   }), [waterSources]);
 
@@ -48,8 +53,9 @@ function FieldComponent({ waterSources }: FieldProps) {
 
   return (
     <RigidBody type="fixed" colliders={false}>
-      <primitive object={terrain} receiveShadow />
-      <CuboidCollider args={[FIELD_COLLIDER_HALF_SIZE, 5, FIELD_COLLIDER_HALF_SIZE]} position={[0, -2, 0]} />
+      <MeshCollider type="trimesh">
+        <primitive object={terrain} receiveShadow />
+      </MeshCollider>
     </RigidBody>
   );
 }
