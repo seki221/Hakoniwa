@@ -9,6 +9,7 @@ import {
 import {
   FIELD_LIMIT,
   CREATURE_GROUND_Y,
+  getCreatureHeightAtPosition,
   getWaterSourceInteractionDistance,
 } from './systems/space';
 import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
@@ -37,6 +38,8 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
     if (!spawnPosition) {
       continue;
     }
+
+    spawnPosition.y = getCreatureHeightAtPosition(spawnPosition, waterSources);
 
     const staminaProfile = createInitialStaminaProfile(i);
 
