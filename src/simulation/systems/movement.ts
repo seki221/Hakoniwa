@@ -4,10 +4,10 @@ import type { WaterSource } from '../../types/waterSource';
 import { isTooClose } from './spawning';
 import {
   FIELD_LIMIT,
-  CREATURE_GROUND_Y,
   getCreatureHeightAtPosition,
   getWaterSourceInteractionDistance,
   getXZDistance,
+  isInsideWaterSource,
 } from './space';
 
 // 生物間の隙間
@@ -308,7 +308,8 @@ const updateCreatureMovement = (
     };
   }
 
-  const inWater = nextPosition.y < CREATURE_GROUND_Y;
+  const inWater = waterSources.some((waterSource) =>
+    isInsideWaterSource(nextPosition, waterSource));
   if (inWater) {
     velocity.multiplyScalar(WATER_SPEED_MULTIPLIER);
     nextPosition.copy(clampToField(
@@ -334,6 +335,7 @@ const isPausedDirection = (direction: THREE.Vector3): boolean => direction.lengt
 
 const updatePausedCreature = (
   creature: CreatureState,
+  waterSources: WaterSource[],
   delta: number,
   nextWanderTimer: number,
 ): CreatureState => {
@@ -342,6 +344,7 @@ const updatePausedCreature = (
   const position = clampToField(
     creature.position.clone().add(velocity.clone().multiplyScalar(delta)),
   );
+  position.y = getCreatureHeightAtPosition(position, waterSources);
 
   return {
     ...creature,
@@ -363,11 +366,16 @@ export const updateWanderingCreature = (
   const shouldChooseNextAction = creature.wanderTimer <= 0;
 
   if (shouldChooseNextAction && !wasPaused && Math.random() < PAUSE_CHANCE) {
-    return updatePausedCreature(creature, delta, createPauseTimer());
+    return updatePausedCreature(creature, waterSources, delta, createPauseTimer());
   }
 
   if (wasPaused && !shouldChooseNextAction) {
-    return updatePausedCreature(creature, delta, creature.wanderTimer - delta);
+    return updatePausedCreature(
+      creature,
+      waterSources,
+      delta,
+      creature.wanderTimer - delta,
+    );
   }
 
   const wanderDirection = shouldChooseNextAction
