@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import type { WaterSource } from '../../types/waterSource';
+import { getTerrainHeightAtPosition } from './terrainMesh';
 
 export const FIELD_LIMIT = 20;
 export const CREATURE_RADIUS = 0.3;
+export const CREATURE_TERRAIN_CLEARANCE = 0.02;
 export const WATER_SOURCE_CLEARANCE = 0.25;
 export const CREATURE_GROUND_Y = CREATURE_RADIUS;
 
@@ -40,7 +42,9 @@ export const getCreatureHeightAtPosition = (
   const waterSource = waterSources.find((water) => isInsideWaterSource(position, water));
 
   if (!waterSource) {
-    return CREATURE_GROUND_Y;
+    return getTerrainHeightAtPosition(position.x, position.z, waterSources)
+      + CREATURE_RADIUS
+      + CREATURE_TERRAIN_CLEARANCE;
   }
 
   const visibleHeight = Math.min(CREATURE_RADIUS * 0.45, waterSource.depth);

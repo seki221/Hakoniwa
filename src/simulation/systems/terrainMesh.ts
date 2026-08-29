@@ -27,6 +27,11 @@ function mix(from: number, to: number, amount: number): number {
   return from + (to - from) * amount;
 }
 
+export const TERRAIN_MIN_HEIGHT = -0.4;
+export const TERRAIN_MAX_HEIGHT = 0.6;
+export const TERRAIN_SIZE = 200;
+export const TERRAIN_CELL_SIZE = 2;
+
 function generateHeight(
   x: number,
   z: number,
@@ -84,6 +89,60 @@ function carveWaterDepression(
   }, baseHeight);
 }
 
+function getTerrainVertexHeightAtPosition(
+  x: number,
+  z: number,
+  waterSources: WaterSource[],
+  minHeight = TERRAIN_MIN_HEIGHT,
+  maxHeight = TERRAIN_MAX_HEIGHT,
+): number {
+  return carveWaterDepression(
+    generateHeight(x, z, minHeight, maxHeight),
+    x,
+    z,
+    waterSources,
+  );
+}
+
+/** Returns the same triangle-interpolated surface height that the terrain mesh renders. */
+export function getTerrainHeightAtPosition(
+  x: number,
+  z: number,
+  waterSources: WaterSource[],
+  minHeight = TERRAIN_MIN_HEIGHT,
+  maxHeight = TERRAIN_MAX_HEIGHT,
+  size = TERRAIN_SIZE,
+  cellSize = TERRAIN_CELL_SIZE,
+): number {
+  const halfSize = size / 2;
+  const cells = Math.floor(size / cellSize);
+  const gridX = clamp((x + halfSize) / cellSize, 0, cells);
+  const gridZ = clamp((z + halfSize) / cellSize, 0, cells);
+  const xIndex = Math.min(Math.floor(gridX), cells - 1);
+  const zIndex = Math.min(Math.floor(gridZ), cells - 1);
+  const x0 = xIndex * cellSize - halfSize;
+  const z0 = zIndex * cellSize - halfSize;
+  const tx = gridX - xIndex;
+  const tz = gridZ - zIndex;
+
+  const h00 = getTerrainVertexHeightAtPosition(x0, z0, waterSources, minHeight, maxHeight);
+  const h10 = getTerrainVertexHeightAtPosition(x0 + cellSize, z0, waterSources, minHeight, maxHeight);
+  const h01 = getTerrainVertexHeightAtPosition(x0, z0 + cellSize, waterSources, minHeight, maxHeight);
+  const h11 = getTerrainVertexHeightAtPosition(
+    x0 + cellSize,
+    z0 + cellSize,
+    waterSources,
+    minHeight,
+    maxHeight,
+  );
+
+  if (tx + tz <= 1) {
+    return h00 + tx * (h10 - h00) + tz * (h01 - h00);
+  }
+
+  return h11 + (1 - tx) * (h01 - h11) + (1 - tz) * (h10 - h11);
+}
+
 export function createTerrainMesh(options: TerrainMeshOptions): THREE.Mesh {
   const { size, cellSize, minHeight, maxHeight, waterSources } = options;
 
@@ -105,11 +164,12 @@ export function createTerrainMesh(options: TerrainMeshOptions): THREE.Mesh {
     for (let xIndex = 0; xIndex < vertexCountPerSide; xIndex++) {
       const x = xIndex * cellSize - halfSize;
       const z = zIndex * cellSize - halfSize;
-      const y = carveWaterDepression(
-        generateHeight(x, z, minHeight, maxHeight),
+      const y = getTerrainVertexHeightAtPosition(
         x,
         z,
         waterSources,
+        minHeight,
+        maxHeight,
       );
 
       positions.push(x, y, z);
