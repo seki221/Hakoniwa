@@ -1,11 +1,13 @@
 import { memo, useEffect, useMemo } from 'react';
 import { MeshCollider, RigidBody } from '@react-three/rapier';
 import {
-  createTerrainMesh,
   TERRAIN_CELL_SIZE,
   TERRAIN_MAX_HEIGHT,
   TERRAIN_MIN_HEIGHT,
   TERRAIN_SIZE,
+} from './simulation/systems/environment';
+import {
+  createTerrainMesh,
 } from './simulation/systems/terrainMesh';
 import type { WaterSource } from './types/waterSource';
 

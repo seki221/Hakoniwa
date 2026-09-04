@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { WaterSource } from '../../types/waterSource';
-import { getTerrainHeightAtPosition } from './terrainMesh';
+import { getTerrainHeightAtPosition } from './environment';
 
 export const FIELD_LIMIT = 20;
 export const CREATURE_RADIUS = 0.3;
