@@ -1,5 +1,6 @@
 import { Cloud } from '@react-three/drei';
 import CreatureLayer from '../components/CreatureLayer';
+import GrassLayer from '../components/GrassLayer';
 import WaterSourceLayer from '../components/WaterSourceLayer';
 import { AnimatedSky } from '../simulation/AnimatedSky';
 import { getDaylightAmount } from '../simulation/systems/sky';
@@ -22,6 +23,7 @@ export default function SimulationScene({ world }: SimulationSceneProps) {
         speed={0.4}
         segments={20}
       />
+      <GrassLayer grassBlades={world.grassBlades} />
       <CreatureLayer creatures={world.creatures} />
       <WaterSourceLayer waterSources={world.waterSources} />
     </>

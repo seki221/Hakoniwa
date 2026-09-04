@@ -15,6 +15,7 @@ import {
 import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
 import { createInitialStaminaProfile } from './systems/fatigue';
 import { createInitialWorldTime } from './systems/time';
+import { createInitialGrassBlades } from './systems/grassSpawning';
 import { createInitialWaterSources } from './systems/waterSourceSpawning';
 
 const MIN_SPACING = 2.5;
@@ -72,9 +73,11 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
 export const createInitialWorld = (): WorldState => {
   const waterSources = createInitialWaterSources();
   const creatures = createCreatures(waterSources);
+  const grassBlades = createInitialGrassBlades(waterSources);
 
   return {
     creatures,
+    grassBlades,
     waterSources,
     time: createInitialWorldTime(),
   };
