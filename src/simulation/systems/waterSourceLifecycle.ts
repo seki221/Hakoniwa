@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { CreatureState } from '../../types/creature';
+import type { WeatherState } from '../../types/Weather';
 import type { WorldTime } from '../../types/WorldTime';
 import type { WaterSource, WaterSourceState, WaterTerrainKind } from '../../types/waterSource';
 import { FIELD_LIMIT, getWaterSourceRadius } from './space';
@@ -19,6 +20,7 @@ const MAX_RESPAWN_ATTEMPTS = 100;
 const BASE_SPRING_EVAPORATION_RATE = 0.035;
 const DAYLIGHT_EVAPORATION_BONUS = 0.09;
 const REFERENCE_SPRING_AREA = 1.4 * 1.4;
+const RAIN_REFILL_RATE = 0.45;
 
 const getEvaporationRate = (
   waterSource: WaterSource,
@@ -73,27 +75,48 @@ const getDrinkAmount = (
   return drinkingCreatures.length * DRINK_RATE * delta;
 };
 
+const getRainRefillAmount = (
+  weather: WeatherState,
+  delta: number,
+): number =>
+  RAIN_REFILL_RATE * weather.precipitation * delta;
+
 const updateWaterAmount = (
   waterSource: WaterSource,
   creatures: CreatureState[],
   time: WorldTime,
+  weather: WeatherState,
   delta: number,
 ): WaterSource => {
-  if (!isTemporarySpring(waterSource) || waterSource.state === 'DRY') {
+  if (!isTemporarySpring(waterSource)) {
     return waterSource;
   }
 
-  const nextAmount = Math.max(
-    0,
-    waterSource.amount
-      - getDrinkAmount(waterSource, creatures, delta)
-      - getEvaporationRate(waterSource, time) * delta,
+  const rainRefillAmount = getRainRefillAmount(weather, delta);
+
+  if (waterSource.state === 'DRY' && rainRefillAmount <= 0) {
+    return waterSource;
+  }
+
+  const nextAmount = Math.min(
+    waterSource.capacity,
+    Math.max(
+      0,
+      waterSource.amount
+        + rainRefillAmount
+        - getDrinkAmount(waterSource, creatures, delta)
+        - getEvaporationRate(waterSource, time) * delta,
+    ),
   );
 
   return {
     ...waterSource,
     amount: nextAmount,
-    state: nextAmount <= 0 ? 'DRY' : waterSource.state,
+    state: nextAmount <= 0
+      ? 'DRY'
+      : waterSource.state === 'DRY'
+        ? 'CLEAN'
+        : waterSource.state,
   };
 };
 
@@ -159,10 +182,11 @@ export const updateWaterSources = (
   waterSources: WaterSource[],
   creatures: CreatureState[],
   time: WorldTime,
+  weather: WeatherState,
   delta: number,
 ): WaterSource[] => {
   const drainedWaterSources = waterSources.map((waterSource) =>
-    updateWaterAmount(waterSource, creatures, time, delta));
+    updateWaterAmount(waterSource, creatures, time, weather, delta));
 
   return drainedWaterSources.map((waterSource) =>
     respawnSpring(waterSource, drainedWaterSources, delta));
