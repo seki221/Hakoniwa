@@ -7,6 +7,7 @@ import {
 } from './systems/fatigue';
 import { updateThirst } from './systems/thirst';
 import { updateWorldTime } from './systems/time';
+import { updateWeather } from './systems/Weather';
 import { SEEK_WATER_THIRST, updateCreatureWaterBehavior } from './systems/waterSeeking';
 import { updateWaterSources } from './systems/waterSourceLifecycle';
 
@@ -19,6 +20,7 @@ export const stepWorld = (
   delta: number,
 ): WorldState => {
   const time = updateWorldTime(world.time, delta);
+  const weather = updateWeather(world.weather, delta * time.speed);
   const thirstyCreatures = world.creatures.map((creature, index) => (
     isActiveCreature(index)
       ? updateThirst(creature, delta)
@@ -53,11 +55,12 @@ export const stepWorld = (
     [],
   );
 
-  const waterSources = updateWaterSources(world.waterSources, creatures, time, delta);
+  const waterSources = updateWaterSources(world.waterSources, creatures, time, weather, delta);
 
   return {
     ...world,
     time,
+    weather,
     creatures,
     waterSources,
   };
