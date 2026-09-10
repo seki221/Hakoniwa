@@ -17,6 +17,7 @@ import { createInitialStaminaProfile } from './systems/fatigue';
 import { createInitialWorldTime } from './systems/time';
 import { createInitialGrassBlades } from './systems/grassSpawning';
 import { createInitialWaterSources } from './systems/waterSourceSpawning';
+import { createInitialWeather } from './systems/Weather';
 
 const MIN_SPACING = 2.5;
 const MAX_ATTEMPTS = 100;
@@ -80,5 +81,6 @@ export const createInitialWorld = (): WorldState => {
     grassBlades,
     waterSources,
     time: createInitialWorldTime(),
+    weather: createInitialWeather(),
   };
 };
