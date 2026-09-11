@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { WaterSource } from '../../types/waterSource';
+import type { WaterBasin } from '../../types/waterSource';
 
 export type EnvironmentSamplingOptions = {
   minHeight?: number;
@@ -27,7 +27,6 @@ export const TERRAIN_SIZE = 200;
 export const TERRAIN_CELL_SIZE = 2;
 
 const WATER_SHORE_BAND = 0.35;
-const WATER_BANK_HEIGHT = 0.08;
 const WATER_EDGE_DEPTH = 0.08;
 const NORMAL_SAMPLE_STEP = 0.75;
 
@@ -112,12 +111,12 @@ function generateBaseTerrainHeight(
 function getNormalizedWaterDistance(
   x: number,
   z: number,
-  waterSource: WaterSource,
+  waterBasin: WaterBasin,
 ): number {
-  const xRadius = waterSource.size[0] / 2;
-  const zRadius = waterSource.size[1] / 2;
-  const dx = (x - waterSource.position.x) / xRadius;
-  const dz = (z - waterSource.position.z) / zRadius;
+  const xRadius = waterBasin.size[0] / 2;
+  const zRadius = waterBasin.size[1] / 2;
+  const dx = (x - waterBasin.position.x) / xRadius;
+  const dz = (z - waterBasin.position.z) / zRadius;
 
   return Math.sqrt(dx * dx + dz * dz);
 }
@@ -125,14 +124,14 @@ function getNormalizedWaterDistance(
 function getNearestWaterDistance(
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
 ): number {
-  if (waterSources.length === 0) {
+  if (waterBasins.length === 0) {
     return Number.POSITIVE_INFINITY;
   }
 
-  return waterSources.reduce((nearestDistance, waterSource) =>
-    Math.min(nearestDistance, getNormalizedWaterDistance(x, z, waterSource)),
+  return waterBasins.reduce((nearestDistance, waterBasin) =>
+    Math.min(nearestDistance, getNormalizedWaterDistance(x, z, waterBasin)),
   Number.POSITIVE_INFINITY);
 }
 
@@ -140,15 +139,15 @@ function carveWaterDepression(
   baseHeight: number,
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
 ): number {
-  return waterSources.reduce((height, waterSource) => {
-    const distance = getNormalizedWaterDistance(x, z, waterSource);
-    const waterLevel = waterSource.position.y;
+  return waterBasins.reduce((height, waterBasin) => {
+    const distance = getNormalizedWaterDistance(x, z, waterBasin);
+    const waterLevel = waterBasin.position.y;
 
     if (distance <= 1) {
       const edgeBlend = smoothstep(0.68, 1, distance);
-      const bottomHeight = waterLevel - waterSource.depth;
+      const bottomHeight = waterLevel - waterBasin.depth;
       const edgeHeight = waterLevel - WATER_EDGE_DEPTH;
 
       return Math.min(height, mix(bottomHeight, edgeHeight, edgeBlend));
@@ -156,7 +155,7 @@ function carveWaterDepression(
 
     if (distance <= 1 + WATER_SHORE_BAND) {
       const shoreBlend = smoothstep(1, 1 + WATER_SHORE_BAND, distance);
-      const bankHeight = waterLevel + WATER_BANK_HEIGHT * (1 - shoreBlend);
+      const bankHeight = waterLevel + waterBasin.rimHeight * (1 - shoreBlend);
 
       return Math.max(height, bankHeight);
     }
@@ -168,7 +167,7 @@ function carveWaterDepression(
 export function getTerrainVertexHeightAtPosition(
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
   minHeight = TERRAIN_MIN_HEIGHT,
   maxHeight = TERRAIN_MAX_HEIGHT,
 ): number {
@@ -176,14 +175,14 @@ export function getTerrainVertexHeightAtPosition(
     generateBaseTerrainHeight(x, z, minHeight, maxHeight),
     x,
     z,
-    waterSources,
+    waterBasins,
   );
 }
 
 export function getTerrainHeightAtPosition(
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
   minHeight = TERRAIN_MIN_HEIGHT,
   maxHeight = TERRAIN_MAX_HEIGHT,
   size = TERRAIN_SIZE,
@@ -199,25 +198,25 @@ export function getTerrainHeightAtPosition(
   const z0 = zIndex * cellSize - halfSize;
   const tx = gridX - xIndex;
   const tz = gridZ - zIndex;
-  const h00 = getTerrainVertexHeightAtPosition(x0, z0, waterSources, minHeight, maxHeight);
+  const h00 = getTerrainVertexHeightAtPosition(x0, z0, waterBasins, minHeight, maxHeight);
   const h10 = getTerrainVertexHeightAtPosition(
     x0 + cellSize,
     z0,
-    waterSources,
+    waterBasins,
     minHeight,
     maxHeight,
   );
   const h01 = getTerrainVertexHeightAtPosition(
     x0,
     z0 + cellSize,
-    waterSources,
+    waterBasins,
     minHeight,
     maxHeight,
   );
   const h11 = getTerrainVertexHeightAtPosition(
     x0 + cellSize,
     z0 + cellSize,
-    waterSources,
+    waterBasins,
     minHeight,
     maxHeight,
   );
@@ -232,13 +231,13 @@ export function getTerrainHeightAtPosition(
 function getTerrainNormalAtPosition(
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
   options: Required<EnvironmentSamplingOptions>,
 ): THREE.Vector3 {
   const left = getTerrainHeightAtPosition(
     x - NORMAL_SAMPLE_STEP,
     z,
-    waterSources,
+    waterBasins,
     options.minHeight,
     options.maxHeight,
     options.size,
@@ -247,7 +246,7 @@ function getTerrainNormalAtPosition(
   const right = getTerrainHeightAtPosition(
     x + NORMAL_SAMPLE_STEP,
     z,
-    waterSources,
+    waterBasins,
     options.minHeight,
     options.maxHeight,
     options.size,
@@ -256,7 +255,7 @@ function getTerrainNormalAtPosition(
   const down = getTerrainHeightAtPosition(
     x,
     z - NORMAL_SAMPLE_STEP,
-    waterSources,
+    waterBasins,
     options.minHeight,
     options.maxHeight,
     options.size,
@@ -265,7 +264,7 @@ function getTerrainNormalAtPosition(
   const up = getTerrainHeightAtPosition(
     x,
     z + NORMAL_SAMPLE_STEP,
-    waterSources,
+    waterBasins,
     options.minHeight,
     options.maxHeight,
     options.size,
@@ -291,27 +290,27 @@ function getRequiredOptions(
 export function sampleEnvironmentAt(
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
   options: EnvironmentSamplingOptions = {},
 ): EnvironmentSample {
   const requiredOptions = getRequiredOptions(options);
   const height = getTerrainHeightAtPosition(
     x,
     z,
-    waterSources,
+    waterBasins,
     requiredOptions.minHeight,
     requiredOptions.maxHeight,
     requiredOptions.size,
     requiredOptions.cellSize,
   );
-  const normal = getTerrainNormalAtPosition(x, z, waterSources, requiredOptions);
+  const normal = getTerrainNormalAtPosition(x, z, waterBasins, requiredOptions);
   const normalizedHeight = clamp(
     (height - requiredOptions.minHeight)
       / (requiredOptions.maxHeight - requiredOptions.minHeight),
     0,
     1,
   );
-  const nearestWaterDistance = getNearestWaterDistance(x, z, waterSources);
+  const nearestWaterDistance = getNearestWaterDistance(x, z, waterBasins);
   const isWater = nearestWaterDistance <= 1;
   const waterInfluence =
     Number.isFinite(nearestWaterDistance)

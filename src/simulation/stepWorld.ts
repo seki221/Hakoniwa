@@ -45,7 +45,13 @@ export const stepWorld = (
         ? recoverRestingCreature(creature, time, delta)
         : updateStaminaAfterActivity(
           creature,
-          updateCreatureWaterBehavior(creature, movementContext, world.waterSources, delta),
+          updateCreatureWaterBehavior(
+            creature,
+            movementContext,
+            world.waterBasins,
+            world.waterSources,
+            delta,
+          ),
           time,
           delta,
         );
@@ -55,7 +61,14 @@ export const stepWorld = (
     [],
   );
 
-  const waterSources = updateWaterSources(world.waterSources, creatures, time, weather, delta);
+  const waterSources = updateWaterSources(
+    world.waterSources,
+    world.waterBasins,
+    creatures,
+    time,
+    weather,
+    delta,
+  );
 
   return {
     ...world,

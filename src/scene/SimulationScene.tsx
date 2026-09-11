@@ -16,7 +16,7 @@ export default function SimulationScene({ world }: SimulationSceneProps) {
       <WeatherCloudLayer weather={world.weather} />
       <GrassLayer grassBlades={world.grassBlades} />
       <CreatureLayer creatures={world.creatures} />
-      <WaterSourceLayer waterSources={world.waterSources} />
+      <WaterSourceLayer waterBasins={world.waterBasins} waterSources={world.waterSources} />
     </>
   );
 }

@@ -9,36 +9,37 @@ import {
 import {
   createTerrainMesh,
 } from './simulation/systems/terrainMesh';
-import type { WaterSource } from './types/waterSource';
+import type { WaterBasin } from './types/waterSource';
 
 export const FIELD_SIZE = TERRAIN_SIZE;
 
 type FieldProps = {
-  waterSources: WaterSource[];
+  waterBasins: WaterBasin[];
 };
 
-const getWaterTerrainShapeKey = (waterSources: WaterSource[]): string =>
-  waterSources
-    .map((waterSource) =>
+const getWaterTerrainShapeKey = (waterBasins: WaterBasin[]): string =>
+  waterBasins
+    .map((waterBasin) =>
       [
-        waterSource.id,
-        waterSource.position.x.toFixed(2),
-        waterSource.position.y.toFixed(2),
-        waterSource.position.z.toFixed(2),
-        waterSource.size[0].toFixed(2),
-        waterSource.size[1].toFixed(2),
-        waterSource.depth.toFixed(2),
+        waterBasin.id,
+        waterBasin.position.x.toFixed(2),
+        waterBasin.position.y.toFixed(2),
+        waterBasin.position.z.toFixed(2),
+        waterBasin.size[0].toFixed(2),
+        waterBasin.size[1].toFixed(2),
+        waterBasin.depth.toFixed(2),
+        waterBasin.rimHeight.toFixed(2),
       ].join(':'))
     .join('|');
 
-function FieldComponent({ waterSources }: FieldProps) {
+function FieldComponent({ waterBasins }: FieldProps) {
   const terrain = useMemo(() => createTerrainMesh({
     size: FIELD_SIZE,
     cellSize: TERRAIN_CELL_SIZE,
     minHeight: TERRAIN_MIN_HEIGHT,
     maxHeight: TERRAIN_MAX_HEIGHT,
-    waterSources,
-  }), [waterSources]);
+    waterBasins,
+  }), [waterBasins]);
 
   useEffect(
     () => () => {
@@ -65,6 +66,6 @@ function FieldComponent({ waterSources }: FieldProps) {
 export const Field = memo(
   FieldComponent,
   (previousProps, nextProps) =>
-    getWaterTerrainShapeKey(previousProps.waterSources)
-    === getWaterTerrainShapeKey(nextProps.waterSources),
+    getWaterTerrainShapeKey(previousProps.waterBasins)
+    === getWaterTerrainShapeKey(nextProps.waterBasins),
 );

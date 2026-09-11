@@ -23,7 +23,7 @@ function WorldScene() {
         maxPolarAngle={Math.PI}
       />
       <Physics gravity={[0, -9.81, 0]}>
-        <Field waterSources={world.waterSources} />
+        <Field waterBasins={world.waterBasins} />
       </Physics>
       <SimulationScene world={world} />
     </>

@@ -1,5 +1,11 @@
 import * as THREE from 'three';
-import type { WaterSource } from '../../types/waterSource';
+import {
+  getWaterBasinBySource,
+  getWaterSurfaceY,
+  isActiveWaterSource,
+  type WaterBasin,
+  type WaterSource,
+} from '../../types/waterSource';
 import { getTerrainHeightAtPosition } from './environment';
 
 export const FIELD_LIMIT = 20;
@@ -18,35 +24,67 @@ export const getXZDistance = (
   return Math.sqrt(dx * dx + dz * dz);
 };
 
-export const getWaterSourceRadius = (
-  waterSource: WaterSource,
+export const getWaterBasinRadius = (
+  waterBasin: WaterBasin,
 ): number =>
-  Math.max(...waterSource.size) / 2;
+  Math.max(...waterBasin.size) / 2;
 
-export const getWaterSourceInteractionDistance = (
-  waterSource: WaterSource,
+export const getWaterBasinInteractionDistance = (
+  waterBasin: WaterBasin,
 ): number =>
-  getWaterSourceRadius(waterSource) + CREATURE_RADIUS + WATER_SOURCE_CLEARANCE;
+  getWaterBasinRadius(waterBasin) + CREATURE_RADIUS + WATER_SOURCE_CLEARANCE;
 
-export const isInsideWaterSource = (
+export const isInsideWaterBasin = (
   position: THREE.Vector3,
-  waterSource: WaterSource,
+  waterBasin: WaterBasin,
 ): boolean =>
-  getXZDistance(position, waterSource.position) < getWaterSourceRadius(waterSource);
+  getXZDistance(position, waterBasin.position) < getWaterBasinRadius(waterBasin);
+
+const getActiveWaterBasinAtPosition = (
+  position: THREE.Vector3,
+  waterBasins: WaterBasin[],
+  waterSources: WaterSource[],
+): { basin: WaterBasin; source: WaterSource } | null => {
+  for (const waterSource of waterSources) {
+    if (!isActiveWaterSource(waterSource)) {
+      continue;
+    }
+
+    const waterBasin = getWaterBasinBySource(waterSource, waterBasins);
+
+    if (waterBasin && isInsideWaterBasin(position, waterBasin)) {
+      return {
+        basin: waterBasin,
+        source: waterSource,
+      };
+    }
+  }
+
+  return null;
+};
+
+export const isInsideActiveWaterSource = (
+  position: THREE.Vector3,
+  waterBasins: WaterBasin[],
+  waterSources: WaterSource[],
+): boolean =>
+  getActiveWaterBasinAtPosition(position, waterBasins, waterSources) !== null;
 
 /** 水面に入った個体を浮かせず、浅瀬では身体の半分ほどを水面下へ沈める。 */
 export const getCreatureHeightAtPosition = (
   position: THREE.Vector3,
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
 ): number => {
-  const waterSource = waterSources.find((water) => isInsideWaterSource(position, water));
+  const activeWater = getActiveWaterBasinAtPosition(position, waterBasins, waterSources);
 
-  if (!waterSource) {
-    return getTerrainHeightAtPosition(position.x, position.z, waterSources)
+  if (!activeWater) {
+    return getTerrainHeightAtPosition(position.x, position.z, waterBasins)
       + CREATURE_RADIUS
       + CREATURE_TERRAIN_CLEARANCE;
   }
 
-  const visibleHeight = Math.min(CREATURE_RADIUS * 0.45, waterSource.depth);
-  return waterSource.position.y + visibleHeight;
+  const visibleHeight = Math.min(CREATURE_RADIUS * 0.45, activeWater.basin.depth);
+
+  return getWaterSurfaceY(activeWater.source, activeWater.basin) + visibleHeight;
 };

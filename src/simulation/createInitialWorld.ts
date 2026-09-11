@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { CreatureState } from '../types/creature';
-import type { WaterSource } from '../types/waterSource';
+import type { WaterBasin, WaterSource } from '../types/waterSource';
 import type { WorldState } from '../types/world';
 import {
   createInitialWanderDirection,
@@ -10,24 +10,27 @@ import {
   FIELD_LIMIT,
   CREATURE_GROUND_Y,
   getCreatureHeightAtPosition,
-  getWaterSourceInteractionDistance,
+  getWaterBasinInteractionDistance,
 } from './systems/space';
 import { findSpawnPosition, type SpawnObstacle } from './systems/spawning';
 import { createInitialStaminaProfile } from './systems/fatigue';
 import { createInitialWorldTime } from './systems/time';
 import { createInitialGrassBlades } from './systems/grassSpawning';
-import { createInitialWaterSources } from './systems/waterSourceSpawning';
+import { createInitialWaterBodies } from './systems/waterSourceSpawning';
 import { createInitialWeather } from './systems/Weather';
 
 const MIN_SPACING = 2.5;
 const MAX_ATTEMPTS = 100;
 const CREATURE_COUNT = 20;
 
-const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
+const createCreatures = (
+  waterBasins: WaterBasin[],
+  waterSources: WaterSource[],
+): CreatureState[] => {
   const creatures: CreatureState[] = [];
-  const occupiedAreas: SpawnObstacle[] = waterSources.map((waterSource) => ({
-    position: waterSource.position.clone(),
-    minDistance: getWaterSourceInteractionDistance(waterSource),
+  const occupiedAreas: SpawnObstacle[] = waterBasins.map((waterBasin) => ({
+    position: waterBasin.position.clone(),
+    minDistance: getWaterBasinInteractionDistance(waterBasin),
   }));
 
   for (let i = 0; i < CREATURE_COUNT; i++) {
@@ -41,7 +44,7 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
       continue;
     }
 
-    spawnPosition.y = getCreatureHeightAtPosition(spawnPosition, waterSources);
+    spawnPosition.y = getCreatureHeightAtPosition(spawnPosition, waterBasins, waterSources);
 
     const staminaProfile = createInitialStaminaProfile(i);
 
@@ -72,13 +75,14 @@ const createCreatures = (waterSources: WaterSource[]): CreatureState[] => {
 };
 
 export const createInitialWorld = (): WorldState => {
-  const waterSources = createInitialWaterSources();
-  const creatures = createCreatures(waterSources);
-  const grassBlades = createInitialGrassBlades(waterSources);
+  const { waterBasins, waterSources } = createInitialWaterBodies();
+  const creatures = createCreatures(waterBasins, waterSources);
+  const grassBlades = createInitialGrassBlades(waterBasins);
 
   return {
     creatures,
     grassBlades,
+    waterBasins,
     waterSources,
     time: createInitialWorldTime(),
     weather: createInitialWeather(),

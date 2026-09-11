@@ -1,13 +1,18 @@
 import * as THREE from 'three';
 import type { CreatureState } from '../../types/creature';
-import type { WaterSource } from '../../types/waterSource';
+import {
+  getWaterBasinBySource,
+  isActiveWaterSource,
+  type WaterBasin,
+  type WaterSource,
+} from '../../types/waterSource';
 import { isTooClose } from './spawning';
 import {
   FIELD_LIMIT,
   getCreatureHeightAtPosition,
-  getWaterSourceInteractionDistance,
+  getWaterBasinInteractionDistance,
   getXZDistance,
-  isInsideWaterSource,
+  isInsideActiveWaterSource,
 } from './space';
 
 // 生物間の隙間
@@ -91,6 +96,7 @@ const clampToField = (position: THREE.Vector3): THREE.Vector3 =>
 const getMovementObstacles = (
   creature: CreatureState,
   creatures: CreatureState[],
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   ignoredObstacleIds: Set<string>,
 ): MovementObstacle[] => [
@@ -102,13 +108,26 @@ const getMovementObstacles = (
       position: otherCreature.position,
       minDistance: CREATURE_MIN_SPACING,
     })),
-  ...waterSources
-    .filter((waterSource) => !ignoredObstacleIds.has(waterSource.id))
-    .map((waterSource) => ({
-      id: waterSource.id,
-      position: waterSource.position,
-      minDistance: getWaterSourceInteractionDistance(waterSource),
-    })),
+  ...waterSources.reduce<MovementObstacle[]>((obstacles, waterSource) => {
+    if (ignoredObstacleIds.has(waterSource.id) || !isActiveWaterSource(waterSource)) {
+      return obstacles;
+    }
+
+    const waterBasin = getWaterBasinBySource(waterSource, waterBasins);
+
+    if (!waterBasin) {
+      return obstacles;
+    }
+
+    return [
+      ...obstacles,
+      {
+        id: waterSource.id,
+        position: waterBasin.position,
+        minDistance: getWaterBasinInteractionDistance(waterBasin),
+      },
+    ];
+  }, []),
 ];
 
 const getMinimumClearanceRatio = (
@@ -242,6 +261,7 @@ const updateCreatureMovement = (
   creature: CreatureState,
   desiredDirection: THREE.Vector3,
   creatures: CreatureState[],
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   delta: number,
   config: MovementConfig,
@@ -252,6 +272,7 @@ const updateCreatureMovement = (
   const obstacles = getMovementObstacles(
     creature,
     creatures,
+    waterBasins,
     waterSources,
     ignoredObstacleIds,
   );
@@ -270,7 +291,7 @@ const updateCreatureMovement = (
   const rawNextPosition = creature.position.clone().add(velocity.clone().multiplyScalar(delta));
   const nextPosition = clampToField(rawNextPosition);
   const hitFieldEdge = !nextPosition.equals(rawNextPosition);
-  nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterSources);
+  nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterBasins, waterSources);
   // 衝突判定
   const isBlocked = isMovingCloserToBlockedArea(
     creature.position,
@@ -290,7 +311,7 @@ const updateCreatureMovement = (
     const escapePosition = clampToField(
       creature.position.clone().add(escapeVelocity.clone().multiplyScalar(delta)),
     );
-    escapePosition.y = getCreatureHeightAtPosition(escapePosition, waterSources);
+    escapePosition.y = getCreatureHeightAtPosition(escapePosition, waterBasins, waterSources);
     const currentClearance = getMinimumClearanceRatio(creature.position, obstacles);
     const escapeClearance = getMinimumClearanceRatio(escapePosition, obstacles);
     const canEscape =
@@ -308,14 +329,13 @@ const updateCreatureMovement = (
     };
   }
 
-  const inWater = waterSources.some((waterSource) =>
-    isInsideWaterSource(nextPosition, waterSource));
+  const inWater = isInsideActiveWaterSource(nextPosition, waterBasins, waterSources);
   if (inWater) {
     velocity.multiplyScalar(WATER_SPEED_MULTIPLIER);
     nextPosition.copy(clampToField(
       creature.position.clone().add(velocity.clone().multiplyScalar(delta)),
     ));
-    nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterSources);
+    nextPosition.y = getCreatureHeightAtPosition(nextPosition, waterBasins, waterSources);
   }
 
   const appliedVelocity = hitFieldEdge && delta > 0
@@ -335,6 +355,7 @@ const isPausedDirection = (direction: THREE.Vector3): boolean => direction.lengt
 
 const updatePausedCreature = (
   creature: CreatureState,
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   delta: number,
   nextWanderTimer: number,
@@ -344,7 +365,7 @@ const updatePausedCreature = (
   const position = clampToField(
     creature.position.clone().add(velocity.clone().multiplyScalar(delta)),
   );
-  position.y = getCreatureHeightAtPosition(position, waterSources);
+  position.y = getCreatureHeightAtPosition(position, waterBasins, waterSources);
 
   return {
     ...creature,
@@ -359,6 +380,7 @@ const updatePausedCreature = (
 export const updateWanderingCreature = (
   creature: CreatureState,
   creatures: CreatureState[],
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   delta: number,
 ): CreatureState => {
@@ -366,12 +388,13 @@ export const updateWanderingCreature = (
   const shouldChooseNextAction = creature.wanderTimer <= 0;
 
   if (shouldChooseNextAction && !wasPaused && Math.random() < PAUSE_CHANCE) {
-    return updatePausedCreature(creature, waterSources, delta, createPauseTimer());
+    return updatePausedCreature(creature, waterBasins, waterSources, delta, createPauseTimer());
   }
 
   if (wasPaused && !shouldChooseNextAction) {
     return updatePausedCreature(
       creature,
+      waterBasins,
       waterSources,
       delta,
       creature.wanderTimer - delta,
@@ -389,6 +412,7 @@ export const updateWanderingCreature = (
     creature,
     wanderDirection,
     creatures,
+    waterBasins,
     waterSources,
     delta,
     {
@@ -402,6 +426,7 @@ export const updateCreatureMovingTowardPosition = (
   creature: CreatureState,
   targetPosition: THREE.Vector3,
   creatures: CreatureState[],
+  waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   delta: number,
   options: MovementOptions = {},
@@ -420,6 +445,7 @@ export const updateCreatureMovingTowardPosition = (
     creature,
     desiredDirection.normalize(),
     creatures,
+    waterBasins,
     waterSources,
     delta,
     {

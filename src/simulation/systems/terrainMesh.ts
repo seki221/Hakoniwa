@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { WaterSource } from '../../types/waterSource';
+import type { WaterBasin } from '../../types/waterSource';
 import {
   getTerrainGroundColor,
   getTerrainVertexHeightAtPosition,
@@ -19,11 +19,11 @@ export type TerrainMeshOptions = {
   cellSize: number;
   minHeight: number;
   maxHeight: number;
-  waterSources: WaterSource[];
+  waterBasins: WaterBasin[];
 };
 
 export function createTerrainMesh(options: TerrainMeshOptions): THREE.Mesh {
-  const { size, cellSize, minHeight, maxHeight, waterSources } = options;
+  const { size, cellSize, minHeight, maxHeight, waterBasins } = options;
 
   // 50m / 0.5m の場合、100セルになる
   const cells = Math.floor(size / cellSize);
@@ -47,11 +47,11 @@ export function createTerrainMesh(options: TerrainMeshOptions): THREE.Mesh {
       const y = getTerrainVertexHeightAtPosition(
         x,
         z,
-        waterSources,
+        waterBasins,
         minHeight,
         maxHeight,
       );
-      const sample = sampleEnvironmentAt(x, z, waterSources, {
+      const sample = sampleEnvironmentAt(x, z, waterBasins, {
         minHeight,
         maxHeight,
         size,

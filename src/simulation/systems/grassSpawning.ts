@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { GrassBlade } from '../../types/vegetation';
-import type { WaterSource } from '../../types/waterSource';
+import type { WaterBasin } from '../../types/waterSource';
 import {
   clamp,
   getDeterministicUnitValue,
@@ -53,9 +53,9 @@ const createGrassBlade = (
   bladeIndex: number,
   x: number,
   z: number,
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
 ): GrassBlade | null => {
-  const sample = sampleEnvironmentAt(x, z, waterSources);
+  const sample = sampleEnvironmentAt(x, z, waterBasins);
 
   if (!sample.isLand || sample.grassDensity < MIN_PATCH_DENSITY * 0.65) {
     return null;
@@ -84,7 +84,7 @@ const createGrassBlade = (
 };
 
 export const createInitialGrassBlades = (
-  waterSources: WaterSource[],
+  waterBasins: WaterBasin[],
 ): GrassBlade[] => {
   const grassBlades: GrassBlade[] = [];
   const start = -GRASS_FIELD_LIMIT;
@@ -96,7 +96,7 @@ export const createInitialGrassBlades = (
       const cellZ = start + zIndex * GRASS_CELL_SIZE;
       const centerX = cellX + GRASS_CELL_SIZE * 0.5;
       const centerZ = cellZ + GRASS_CELL_SIZE * 0.5;
-      const sample = sampleEnvironmentAt(centerX, centerZ, waterSources);
+      const sample = sampleEnvironmentAt(centerX, centerZ, waterBasins);
       const patchRoll = getCellRandom(xIndex, zIndex, 251);
 
       if (!sample.isLand || sample.grassDensity < MIN_PATCH_DENSITY) {
@@ -123,7 +123,7 @@ export const createInitialGrassBlades = (
           * 0.82;
         const bladeX = clamp(centerX + offsetX, -GRASS_FIELD_LIMIT, GRASS_FIELD_LIMIT);
         const bladeZ = clamp(centerZ + offsetZ, -GRASS_FIELD_LIMIT, GRASS_FIELD_LIMIT);
-        const blade = createGrassBlade(patchId, bladeIndex, bladeX, bladeZ, waterSources);
+        const blade = createGrassBlade(patchId, bladeIndex, bladeX, bladeZ, waterBasins);
 
         if (blade) {
           grassBlades.push(blade);

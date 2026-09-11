@@ -4,41 +4,36 @@ import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { Water as ThreeWater } from 'three/addons/objects/Water.js';
 import waterTextureSrc from '../assets/water.png';
-import type { WaterSource } from '../types/waterSource';
+import {
+  getWaterBasinBySource,
+  getWaterFillRatio,
+  getWaterSurfaceY,
+  isActiveWaterSource,
+  type WaterBasin,
+  type WaterSource,
+} from '../types/waterSource';
 
 type WaterSourceLayerProps = {
+  waterBasins: WaterBasin[];
   waterSources: WaterSource[];
 };
 
 type WaterSurfaceProps = {
+  waterBasin: WaterBasin;
   waterSource: WaterSource;
   waterNormals: THREE.Texture;
 };
 
-const getWaterFillRatio = (waterSource: WaterSource): number => {
-  if (waterSource.capacity <= 0) {
-    return 0;
-  }
-
-  return Math.max(0, Math.min(1, waterSource.amount / waterSource.capacity));
-};
-
-const getWaterSurfaceY = (waterSource: WaterSource): number => {
-  const fillRatio = getWaterFillRatio(waterSource);
-
-  return waterSource.position.y - waterSource.depth * (1 - fillRatio) * 0.55;
-};
-
-function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
+function WaterSurface({ waterBasin, waterSource, waterNormals }: WaterSurfaceProps) {
   const waterRef = useRef<ThreeWater | null>(null);
   const fillRatio = getWaterFillRatio(waterSource);
-  const waterScale = Math.sqrt(fillRatio);
-  const xRadius = waterSource.size[0] / 2;
-  const zRadius = waterSource.size[1] / 2;
+  const waterScale = 0.72 + Math.sqrt(fillRatio) * 0.28;
+  const xRadius = waterBasin.size[0] / 2;
+  const zRadius = waterBasin.size[1] / 2;
   const position = [
-    waterSource.position.x,
-    getWaterSurfaceY(waterSource),
-    waterSource.position.z,
+    waterBasin.position.x,
+    getWaterSurfaceY(waterSource, waterBasin),
+    waterBasin.position.z,
   ] satisfies [number, number, number];
   const geometry = useMemo(
     () => new THREE.CircleGeometry(1, 64),
@@ -87,7 +82,7 @@ function WaterSurface({ waterSource, waterNormals }: WaterSurfaceProps) {
   );
 }
 
-export default function WaterSourceLayer({ waterSources }: WaterSourceLayerProps) {
+export default function WaterSourceLayer({ waterBasins, waterSources }: WaterSourceLayerProps) {
   const waterTexture = useTexture(waterTextureSrc);
   const waterNormals = useMemo(() => {
     const texture = waterTexture.clone();
@@ -104,14 +99,23 @@ export default function WaterSourceLayer({ waterSources }: WaterSourceLayerProps
   return (
     <group>
       {waterSources
-        .filter((waterSource) => waterSource.state !== 'DRY' && waterSource.amount > 0)
-        .map((waterSource) => (
-          <WaterSurface
-            key={waterSource.id}
-            waterSource={waterSource}
-            waterNormals={waterNormals}
-          />
-        ))}
+        .filter(isActiveWaterSource)
+        .map((waterSource) => {
+          const waterBasin = getWaterBasinBySource(waterSource, waterBasins);
+
+          if (!waterBasin) {
+            return null;
+          }
+
+          return (
+            <WaterSurface
+              key={waterSource.id}
+              waterBasin={waterBasin}
+              waterSource={waterSource}
+              waterNormals={waterNormals}
+            />
+          );
+        })}
     </group>
   );
 }
