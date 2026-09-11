@@ -14,6 +14,10 @@ export type CreatureStaminaProfile = {
 };
 
 export type CreatureState = {
+  id: string;
+  name: string;
+  homeid: string;
+  settlementid: string;
   position: THREE.Vector3;
   velocity: THREE.Vector3;
   wanderDirection: THREE.Vector3;
