@@ -1,5 +1,6 @@
 import type { CreatureState } from '../types/creature';
 import { CREATURE_RADIUS } from '../simulation/systems/space';
+import { getCreatureScale } from '../simulation/systems/lifeCycle';
 
 type CreatureLayerProps = {
   creatures: CreatureState[];
@@ -29,7 +30,7 @@ export default function CreatureLayer({ creatures }: CreatureLayerProps) {
   return (
     <group>
       {creatures.map((creature) => (
-        <mesh key={creature.id} position={creature.position}>
+        <mesh key={creature.id} position={creature.position} scale={getCreatureScale(creature)}>
           <sphereGeometry args={[CREATURE_RADIUS]} />
           <meshStandardMaterial color={getCreatureColor(creature)} />
         </mesh>

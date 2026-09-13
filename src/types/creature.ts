@@ -16,8 +16,9 @@ export type CreatureStaminaProfile = {
 export type CreatureState = {
   id: string;
   name: string;
-  homeid: string;
+  /*集落情報 */
   settlementid: string;
+  homeid: string;
   position: THREE.Vector3;
   velocity: THREE.Vector3;
   wanderDirection: THREE.Vector3;
@@ -31,4 +32,16 @@ export type CreatureState = {
   hunger: number;
   affiliation: CreatureFaction;
   state: CreatureBehaviorState;
+  age: number;
+  lifeExpectancy: number;
+  generation: number;
+  parentIds: string[];
+  reproductionTimer: number;
+};
+
+export type ResourceInformation = {
+  id: string;
+  resourceId: string;
+  discoveredAt: number;
+  expiresAt: number;
 };

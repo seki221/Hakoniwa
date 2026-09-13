@@ -51,6 +51,8 @@ const createCreatures = (
     creatures.push({
       id: `creature_${i}`,
       name: `creature_${i}`,
+      settlementid: 'settlement_0',
+      homeid: `home_${i}`,
       position: spawnPosition,
       velocity: new THREE.Vector3(0, 0, 0),
       wanderDirection: createInitialWanderDirection(),
@@ -64,6 +66,11 @@ const createCreatures = (
       thirst: 0,
       affiliation: 'GREEN',
       state: 'WANDERING',
+      age: Math.random() * 180,
+      lifeExpectancy: 540 + Math.random() * 360,
+      generation: 0,
+      parentIds: [],
+      reproductionTimer: 45 + Math.random() * 75,
     });
     occupiedAreas.push({
       position: spawnPosition,

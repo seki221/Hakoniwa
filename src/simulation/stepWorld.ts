@@ -10,10 +10,7 @@ import { updateWorldTime } from './systems/time';
 import { updateWeather } from './systems/Weather';
 import { SEEK_WATER_THIRST, updateCreatureWaterBehavior } from './systems/waterSeeking';
 import { updateWaterSources } from './systems/waterSourceLifecycle';
-
-const ACTIVE_CREATURE_LIMIT = 20;
-
-const isActiveCreature = (index: number): boolean => index < ACTIVE_CREATURE_LIMIT;
+import { updateCreatureLifeCycles } from './systems/lifeCycle';
 
 export const stepWorld = (
   world: WorldState,
@@ -21,17 +18,10 @@ export const stepWorld = (
 ): WorldState => {
   const time = updateWorldTime(world.time, delta);
   const weather = updateWeather(world.weather, delta * time.speed);
-  const thirstyCreatures = world.creatures.map((creature, index) => (
-    isActiveCreature(index)
-      ? updateThirst(creature, delta)
-      : creature
-  ));
+  const thirstyCreatures = world.creatures.map((creature) => updateThirst(creature, delta));
 
   const creatures = thirstyCreatures.reduce<WorldState['creatures']>(
     (updatedCreatures, creature, index) => {
-      if (!isActiveCreature(index)) {
-        return [...updatedCreatures, creature];
-      }
 
       const movementContext = [
         ...updatedCreatures,
@@ -69,12 +59,18 @@ export const stepWorld = (
     weather,
     delta,
   );
+  const livingCreatures = updateCreatureLifeCycles(
+    creatures,
+    world.waterBasins,
+    waterSources,
+    delta,
+  );
 
   return {
     ...world,
     time,
     weather,
-    creatures,
+    creatures: livingCreatures,
     waterSources,
   };
 };
