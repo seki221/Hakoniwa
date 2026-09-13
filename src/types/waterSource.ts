@@ -33,7 +33,7 @@ export const getWaterSurfaceY = (
   waterSource: WaterSource,
   basin: WaterBasin,
 ): number =>
-  basin.position.y - basin.depth * (1 - getWaterFillRatio(waterSource)) * 0.55;
+  basin.position.y - basin.depth * (1 - getWaterFillRatio(waterSource));
 
 export const getWaterBasinBySource = (
   waterSource: WaterSource,

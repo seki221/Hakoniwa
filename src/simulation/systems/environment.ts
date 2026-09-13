@@ -24,10 +24,11 @@ export type EnvironmentSample = {
 export const TERRAIN_MIN_HEIGHT = -0.4;
 export const TERRAIN_MAX_HEIGHT = 0.6;
 export const TERRAIN_SIZE = 200;
-export const TERRAIN_CELL_SIZE = 2;
+export const TERRAIN_CELL_SIZE = 1;
 
 const WATER_SHORE_BAND = 0.35;
-const WATER_EDGE_DEPTH = 0.08;
+export const WATER_DEPRESSION_FLAT_RADIUS = 0.68;
+export const WATER_EDGE_DEPTH = 0.08;
 const NORMAL_SAMPLE_STEP = 0.75;
 
 const LOW_GROUND_COLOR = new THREE.Color('#7f9d5c');
@@ -146,7 +147,7 @@ function carveWaterDepression(
     const waterLevel = waterBasin.position.y;
 
     if (distance <= 1) {
-      const edgeBlend = smoothstep(0.68, 1, distance);
+      const edgeBlend = smoothstep(WATER_DEPRESSION_FLAT_RADIUS, 1, distance);
       const bottomHeight = waterLevel - waterBasin.depth;
       const edgeHeight = waterLevel - WATER_EDGE_DEPTH;
 
