@@ -18,6 +18,7 @@ import { createInitialWorldTime } from './systems/time';
 import { createInitialGrassBlades } from './systems/grassSpawning';
 import { createInitialWaterBodies } from './systems/waterSourceSpawning';
 import { createInitialWeather } from './systems/Weather';
+import { createInitialPlantFoods } from './systems/plantFoodSpawning';
 
 const MIN_SPACING = 2.5;
 const MAX_ATTEMPTS = 100;
@@ -86,10 +87,12 @@ export const createInitialWorld = (): WorldState => {
   const { waterBasins, waterSources } = createInitialWaterBodies();
   const creatures = createCreatures(waterBasins, waterSources);
   const grassBlades = createInitialGrassBlades(waterBasins);
+  const plantFoods = createInitialPlantFoods(grassBlades);
 
   return {
     creatures,
     grassBlades,
+    plantFoods,
     waterBasins,
     waterSources,
     time: createInitialWorldTime(),

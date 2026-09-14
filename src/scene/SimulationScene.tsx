@@ -4,6 +4,7 @@ import WeatherCloudLayer from '../components/WeatherCloudLayer';
 import WaterSourceLayer from '../components/WaterSourceLayer';
 import { AnimatedSky } from '../simulation/AnimatedSky';
 import type { WorldState } from '../types/world';
+import PlantFoodLayer from '../components/PlantFoodLayer';
 
 type SimulationSceneProps = {
   world: WorldState;
@@ -15,6 +16,7 @@ export default function SimulationScene({ world }: SimulationSceneProps) {
       <AnimatedSky time={world.time} />
       <WeatherCloudLayer weather={world.weather} />
       <GrassLayer grassBlades={world.grassBlades} />
+      <PlantFoodLayer plantFoods={world.plantFoods} />
       <CreatureLayer creatures={world.creatures} />
       <WaterSourceLayer waterBasins={world.waterBasins} waterSources={world.waterSources} />
     </>

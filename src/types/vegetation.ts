@@ -14,3 +14,12 @@ export type GrassBlade = {
   isEdible: boolean;
   regrowthRemaining: number;
 };
+
+export type PlantFood = {
+  id: string;
+  position: THREE.Vector3;
+  color: string;
+  nutrition: number;
+  isAvailable: boolean;
+  regrowthRemaining: number;
+};

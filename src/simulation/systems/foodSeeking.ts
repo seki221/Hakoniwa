@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { CreatureState } from '../../types/creature';
-import type { GrassBlade } from '../../types/vegetation';
+import type { GrassBlade, PlantFood } from '../../types/vegetation';
 import type { WaterBasin, WaterSource } from '../../types/waterSource';
 import {
   createInitialWanderDirection,
@@ -17,7 +17,14 @@ const EATING_DISTANCE = 0.9;
 
 export type FoodBehaviorResult = {
   creature: CreatureState;
-  consumedGrassId: string | null;
+  consumedFood: { kind: 'GRASS' | 'PLANT_FOOD'; id: string } | null;
+};
+
+type FoodTarget = {
+  id: string;
+  position: THREE.Vector3;
+  nutrition: number;
+  kind: 'GRASS' | 'PLANT_FOOD';
 };
 
 const setWandering = (creature: CreatureState): CreatureState => ({
@@ -28,24 +35,40 @@ const setWandering = (creature: CreatureState): CreatureState => ({
   wanderTimer: createInitialWanderTimer(),
 });
 
-const findNearestGrass = (
+const findNearestFood = (
   creature: CreatureState,
   grassBlades: GrassBlade[],
-): GrassBlade | null => {
-  const currentTarget = grassBlades.find(
-    (grassBlade) => grassBlade.id === creature.targetFoodId && grassBlade.isEdible,
-  );
+  plantFoods: PlantFood[],
+): FoodTarget | null => {
+  const availableFood: FoodTarget[] = [
+    ...grassBlades
+      .filter((grassBlade) => grassBlade.isEdible)
+      .map((grassBlade) => ({
+        id: grassBlade.id,
+        position: grassBlade.position,
+        nutrition: GRASS_NUTRITION,
+        kind: 'GRASS' as const,
+      })),
+    ...plantFoods
+      .filter((plantFood) => plantFood.isAvailable)
+      .map((plantFood) => ({
+        id: plantFood.id,
+        position: plantFood.position,
+        nutrition: plantFood.nutrition,
+        kind: 'PLANT_FOOD' as const,
+      })),
+  ];
+  const currentTarget = availableFood.find((food) => food.id === creature.targetFoodId);
 
   if (currentTarget) return currentTarget;
 
-  let nearest: GrassBlade | null = null;
+  let nearest: FoodTarget | null = null;
   let nearestDistance = Number.POSITIVE_INFINITY;
 
-  for (const grassBlade of grassBlades) {
-    if (!grassBlade.isEdible) continue;
-    const distance = getXZDistance(creature.position, grassBlade.position);
+  for (const food of availableFood) {
+    const distance = getXZDistance(creature.position, food.position);
     if (distance < nearestDistance) {
-      nearest = grassBlade;
+      nearest = food;
       nearestDistance = distance;
     }
   }
@@ -62,11 +85,12 @@ export const updateCreatureFoodBehavior = (
   creature: CreatureState,
   creatures: CreatureState[],
   grassBlades: GrassBlade[],
+  plantFoods: PlantFood[],
   waterBasins: WaterBasin[],
   waterSources: WaterSource[],
   delta: number,
 ): FoodBehaviorResult => {
-  const target = findNearestGrass(creature, grassBlades);
+  const target = findNearestFood(creature, grassBlades, plantFoods);
 
   if (!target) {
     return {
@@ -77,7 +101,7 @@ export const updateCreatureFoodBehavior = (
         waterSources,
         delta,
       ),
-      consumedGrassId: null,
+      consumedFood: null,
     };
   }
 
@@ -85,12 +109,12 @@ export const updateCreatureFoodBehavior = (
     return {
       creature: {
         ...creature,
-        hunger: Math.min(MAX_SATIETY, creature.hunger + GRASS_NUTRITION),
+        hunger: Math.min(MAX_SATIETY, creature.hunger + target.nutrition),
         velocity: new THREE.Vector3(),
         state: 'EATING',
         targetFoodId: null,
       },
-      consumedGrassId: target.id,
+      consumedFood: { kind: target.kind, id: target.id },
     };
   }
 
@@ -114,6 +138,6 @@ export const updateCreatureFoodBehavior = (
       state: 'HEADING_TO_FOOD',
       targetFoodId: target.id,
     },
-    consumedGrassId: null,
+    consumedFood: null,
   };
 };
