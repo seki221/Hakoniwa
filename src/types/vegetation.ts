@@ -12,4 +12,5 @@ export type GrassBlade = {
   swayPhase: number;
   swayStrength: number;
   isEdible: boolean;
+  regrowthRemaining: number;
 };

@@ -17,6 +17,7 @@ import {
   updateCreatureFoodBehavior,
 } from './systems/foodSeeking';
 import { shouldCreatureSeekWater } from './systems/waterSeeking';
+import { consumeGrassBlade, updateGrassRegrowth } from './systems/grassLifecycle';
 
 export const stepWorld = (
   world: WorldState,
@@ -26,7 +27,7 @@ export const stepWorld = (
   const weather = updateWeather(world.weather, delta * time.speed);
   const needyCreatures = world.creatures.map((creature) =>
     updateHunger(updateThirst(creature, delta), delta));
-  let grassBlades = world.grassBlades;
+  let grassBlades = updateGrassRegrowth(world.grassBlades, delta);
 
   const creatures = needyCreatures.reduce<WorldState['creatures']>(
     (updatedCreatures, creature, index) => {
@@ -65,7 +66,7 @@ export const stepWorld = (
           if (foodResult.consumedGrassId) {
             grassBlades = grassBlades.map((grassBlade) =>
               grassBlade.id === foodResult.consumedGrassId
-                ? { ...grassBlade, isEdible: false }
+                ? consumeGrassBlade(grassBlade)
                 : grassBlade);
           }
         } else {
