@@ -11,4 +11,5 @@ export type GrassBlade = {
   color: string;
   swayPhase: number;
   swayStrength: number;
+  isEdible: boolean;
 };

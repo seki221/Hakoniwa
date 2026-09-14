@@ -58,6 +58,7 @@ const createCreatures = (
       wanderDirection: createInitialWanderDirection(),
       wanderTimer: createInitialWanderTimer(),
       targetWaterSourceId: null,
+      targetFoodId: null,
       type: 'CREATURE',
       hp: 100,
       stamina: staminaProfile.maxStamina,

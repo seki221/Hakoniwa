@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 
 export type CreatureFaction = 'GREEN' | 'RED' | 'BLUE';
-export type CreatureBehaviorState = 'WANDERING' | 'HEADING_TO_WATER' | 'DRINKING' | 'RESTING';
+export type CreatureBehaviorState =
+  | 'WANDERING'
+  | 'HEADING_TO_WATER'
+  | 'DRINKING'
+  | 'HEADING_TO_FOOD'
+  | 'EATING'
+  | 'RESTING';
 
 export type CreatureStaminaProfile = {
   maxStamina: number;
@@ -24,6 +30,7 @@ export type CreatureState = {
   wanderDirection: THREE.Vector3;
   wanderTimer: number;
   targetWaterSourceId: string | null;
+  targetFoodId: string | null;
   type: 'CREATURE';
   hp: number;
   stamina: number;

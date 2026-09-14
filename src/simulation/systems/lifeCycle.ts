@@ -60,6 +60,7 @@ const createOffspring = (
     wanderDirection: createInitialWanderDirection(),
     wanderTimer: createInitialWanderTimer(),
     targetWaterSourceId: null,
+    targetFoodId: null,
     stamina: staminaProfile.maxStamina,
     staminaProfile,
     thirst: 0,

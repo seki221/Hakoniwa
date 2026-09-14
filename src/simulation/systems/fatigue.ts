@@ -57,6 +57,7 @@ export const recoverRestingCreature = (
     velocity: new THREE.Vector3(0, 0, 0),
     state: stamina >= getRestedStamina(creature) ? 'WANDERING' : 'RESTING',
     targetWaterSourceId: null,
+    targetFoodId: null,
   };
 };
 
@@ -97,6 +98,7 @@ export const updateStaminaAfterActivity = (
       velocity: new THREE.Vector3(0, 0, 0),
       state: 'RESTING',
       targetWaterSourceId: null,
+      targetFoodId: null,
     };
   }
 

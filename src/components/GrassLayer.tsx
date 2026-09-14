@@ -87,7 +87,14 @@ function createGrassMesh(grassBlades: GrassBlade[]): THREE.InstancedMesh | null 
 }
 
 function GrassLayerComponent({ grassBlades }: GrassLayerProps) {
-  const grassMesh = useMemo(() => createGrassMesh(grassBlades), [grassBlades]);
+  const edibleGrassBlades = useMemo(
+    () => grassBlades.filter((grassBlade) => grassBlade.isEdible),
+    [grassBlades],
+  );
+  const grassMesh = useMemo(
+    () => createGrassMesh(edibleGrassBlades),
+    [edibleGrassBlades],
+  );
 
   useEffect(
     () => () => {

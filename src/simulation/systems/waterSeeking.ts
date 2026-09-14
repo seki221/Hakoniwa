@@ -130,6 +130,7 @@ const setWandering = (creature: CreatureState): CreatureState => ({
   ...creature,
   state: 'WANDERING',
   targetWaterSourceId: null,
+  targetFoodId: null,
   wanderDirection: createInitialWanderDirection(),
   wanderTimer: createInitialWanderTimer(),
 });
@@ -179,6 +180,7 @@ const headToWaterSource = (
       ...creature,
       state: 'HEADING_TO_WATER',
       targetWaterSourceId: waterTarget.source.id,
+      targetFoodId: null,
     },
     approachPosition,
     creatures,
@@ -242,3 +244,8 @@ export const updateCreatureWaterBehavior = (
 
   return headToWaterSource(creature, creatures, waterBasins, waterSources, waterTarget, delta);
 };
+
+export const shouldCreatureSeekWater = (creature: CreatureState): boolean =>
+  creature.state === 'HEADING_TO_WATER'
+  || creature.state === 'DRINKING'
+  || creature.thirst >= SEEK_WATER_THIRST;

@@ -22,6 +22,14 @@ const getCreatureColor = (creature: CreatureState): string => {
     // 深い黄系
   }
 
+  if (creature.state === 'EATING') {
+    return '#79a857';
+  }
+
+  if (creature.state === 'HEADING_TO_FOOD') {
+    return '#a6b95f';
+  }
+
   return '#b3976d';
   // 灰みの橙系
 };

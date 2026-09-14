@@ -11,6 +11,12 @@ import { updateWeather } from './systems/Weather';
 import { SEEK_WATER_THIRST, updateCreatureWaterBehavior } from './systems/waterSeeking';
 import { updateWaterSources } from './systems/waterSourceLifecycle';
 import { updateCreatureLifeCycles } from './systems/lifeCycle';
+import { updateHunger } from './systems/hunger';
+import {
+  shouldCreatureSeekFood,
+  updateCreatureFoodBehavior,
+} from './systems/foodSeeking';
+import { shouldCreatureSeekWater } from './systems/waterSeeking';
 
 export const stepWorld = (
   world: WorldState,
@@ -18,33 +24,67 @@ export const stepWorld = (
 ): WorldState => {
   const time = updateWorldTime(world.time, delta);
   const weather = updateWeather(world.weather, delta * time.speed);
-  const thirstyCreatures = world.creatures.map((creature) => updateThirst(creature, delta));
+  const needyCreatures = world.creatures.map((creature) =>
+    updateHunger(updateThirst(creature, delta), delta));
+  let grassBlades = world.grassBlades;
 
-  const creatures = thirstyCreatures.reduce<WorldState['creatures']>(
+  const creatures = needyCreatures.reduce<WorldState['creatures']>(
     (updatedCreatures, creature, index) => {
-
       const movementContext = [
         ...updatedCreatures,
-        ...thirstyCreatures.slice(index + 1),
+        ...needyCreatures.slice(index + 1),
       ];
 
       const shouldRest =
         creature.thirst < SEEK_WATER_THIRST
         && (shouldForceRest(creature) || shouldKeepResting(creature));
-      const updatedCreature = shouldRest
+      let updatedCreature = shouldRest
         ? recoverRestingCreature(creature, time, delta)
-        : updateStaminaAfterActivity(
-          creature,
-          updateCreatureWaterBehavior(
+        : creature;
+
+      if (!shouldRest) {
+        if (shouldCreatureSeekWater(creature)) {
+          updatedCreature = updateCreatureWaterBehavior(
             creature,
             movementContext,
             world.waterBasins,
             world.waterSources,
             delta,
-          ),
+          );
+        } else if (shouldCreatureSeekFood(creature)) {
+          const foodResult = updateCreatureFoodBehavior(
+            creature,
+            movementContext,
+            grassBlades,
+            world.waterBasins,
+            world.waterSources,
+            delta,
+          );
+          updatedCreature = foodResult.creature;
+
+          if (foodResult.consumedGrassId) {
+            grassBlades = grassBlades.map((grassBlade) =>
+              grassBlade.id === foodResult.consumedGrassId
+                ? { ...grassBlade, isEdible: false }
+                : grassBlade);
+          }
+        } else {
+          updatedCreature = updateCreatureWaterBehavior(
+            creature,
+            movementContext,
+            world.waterBasins,
+            world.waterSources,
+            delta,
+          );
+        }
+
+        updatedCreature = updateStaminaAfterActivity(
+          creature,
+          updatedCreature,
           time,
           delta,
         );
+      }
 
       return [...updatedCreatures, updatedCreature];
     },
@@ -71,6 +111,7 @@ export const stepWorld = (
     time,
     weather,
     creatures: livingCreatures,
+    grassBlades,
     waterSources,
   };
 };
