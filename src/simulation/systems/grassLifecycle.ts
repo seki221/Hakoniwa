@@ -7,24 +7,27 @@ const createRegrowthTime = (): number =>
   MIN_REGROWTH_SECONDS
   + Math.random() * (MAX_REGROWTH_SECONDS - MIN_REGROWTH_SECONDS);
 
-export const consumeGrassBlade = (grassBlade: GrassBlade): GrassBlade => ({
+export const consumeGrassBlade = (
+  grassBlade: GrassBlade,
+  elapsedSeconds: number,
+): GrassBlade => ({
   ...grassBlade,
   isEdible: false,
-  regrowthRemaining: createRegrowthTime(),
+  regrowsAt: elapsedSeconds + createRegrowthTime(),
 });
 
 export const updateGrassRegrowth = (
   grassBlades: GrassBlade[],
-  delta: number,
-): GrassBlade[] =>
-  grassBlades.map((grassBlade) => {
-    if (grassBlade.isEdible) return grassBlade;
+  elapsedSeconds: number,
+): GrassBlade[] => {
+  const hasRegrownGrass = grassBlades.some(
+    (grassBlade) => !grassBlade.isEdible && grassBlade.regrowsAt <= elapsedSeconds,
+  );
 
-    const regrowthRemaining = Math.max(0, grassBlade.regrowthRemaining - delta);
+  if (!hasRegrownGrass) return grassBlades;
 
-    return {
-      ...grassBlade,
-      isEdible: regrowthRemaining === 0,
-      regrowthRemaining,
-    };
-  });
+  return grassBlades.map((grassBlade) =>
+    !grassBlade.isEdible && grassBlade.regrowsAt <= elapsedSeconds
+      ? { ...grassBlade, isEdible: true, regrowsAt: 0 }
+      : grassBlade);
+};

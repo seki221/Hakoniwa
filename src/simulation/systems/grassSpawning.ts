@@ -81,7 +81,7 @@ const createGrassBlade = (
     swayPhase: randomBase * Math.PI * 2,
     swayStrength: mix(0.2, 0.75, sample.grassDensity),
     isEdible: true,
-    regrowthRemaining: 0,
+    regrowsAt: 0,
   };
 };
 

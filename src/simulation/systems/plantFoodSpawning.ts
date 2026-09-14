@@ -17,7 +17,7 @@ export const createInitialPlantFoods = (
         color: FRUIT_COLORS[index % FRUIT_COLORS.length],
         nutrition: 55,
         isAvailable: true,
-        regrowthRemaining: 0,
+        regrowsAt: 0,
       },
     ];
   }, []);

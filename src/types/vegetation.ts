@@ -12,7 +12,7 @@ export type GrassBlade = {
   swayPhase: number;
   swayStrength: number;
   isEdible: boolean;
-  regrowthRemaining: number;
+  regrowsAt: number;
 };
 
 export type PlantFood = {
@@ -21,5 +21,5 @@ export type PlantFood = {
   color: string;
   nutrition: number;
   isAvailable: boolean;
-  regrowthRemaining: number;
+  regrowsAt: number;
 };

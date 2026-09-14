@@ -35,8 +35,8 @@ export const stepWorld = (
       updateThirst(creature, elapsedGameMinutes),
       elapsedGameMinutes,
     ));
-  let grassBlades = updateGrassRegrowth(world.grassBlades, delta);
-  let plantFoods = updatePlantFoodRegrowth(world.plantFoods, delta);
+  let grassBlades = updateGrassRegrowth(world.grassBlades, time.elapsedSeconds);
+  let plantFoods = updatePlantFoodRegrowth(world.plantFoods, time.elapsedSeconds);
 
   const creatures = needyCreatures.reduce<WorldState['creatures']>(
     (updatedCreatures, creature, index) => {
@@ -76,14 +76,14 @@ export const stepWorld = (
           if (foodResult.consumedFood?.kind === 'GRASS') {
             grassBlades = grassBlades.map((grassBlade) =>
               grassBlade.id === foodResult.consumedFood?.id
-                ? consumeGrassBlade(grassBlade)
+                ? consumeGrassBlade(grassBlade, time.elapsedSeconds)
                 : grassBlade);
           }
 
           if (foodResult.consumedFood?.kind === 'PLANT_FOOD') {
             plantFoods = plantFoods.map((plantFood) =>
               plantFood.id === foodResult.consumedFood?.id
-                ? consumePlantFood(plantFood)
+                ? consumePlantFood(plantFood, time.elapsedSeconds)
                 : plantFood);
           }
         } else {
