@@ -7,12 +7,17 @@ import type { WaterBasin, WaterSource } from '../../types/waterSource';
 
 export type CreatureLifeStage = 'CHILD' | 'ADULT' | 'OLD';
 
-const ADULT_AGE = 90;
+const ADULT_AGE = 720;
 const OLD_AGE_RATIO = 0.75;
 const REPRODUCTION_INTERVAL = 105;
 const REPRODUCTION_JITTER = 45;
 const OFFSPRING_DISTANCE = 2.2;
 const MAX_CREATURES = 60;
+
+export const isCreatureAlive = (creature: CreatureState): boolean =>
+  creature.age < creature.lifeExpectancy
+  && creature.hunger > 0
+  && creature.thirst < 100;
 
 export const getCreatureLifeStage = (creature: CreatureState): CreatureLifeStage => {
   if (creature.age < ADULT_AGE) return 'CHILD';
@@ -67,7 +72,7 @@ const createOffspring = (
     hunger: 100,
     state: 'WANDERING',
     age: 0,
-    lifeExpectancy: 540 + Math.random() * 360,
+    lifeExpectancy: 4_320 + Math.random() * 2_880,
     generation: parent.generation + 1,
     parentIds: [parent.id],
     reproductionTimer: nextReproductionTimer(),
@@ -82,7 +87,7 @@ export const updateCreatureLifeCycles = (
 ): CreatureState[] => {
   const livingCreatures = creatures
     .map((creature) => ({ ...creature, age: creature.age + delta, reproductionTimer: creature.reproductionTimer - delta }))
-    .filter((creature) => creature.age < creature.lifeExpectancy);
+    .filter(isCreatureAlive);
   const availableSlots = MAX_CREATURES - livingCreatures.length;
   if (availableSlots <= 0) return livingCreatures;
 

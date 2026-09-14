@@ -29,8 +29,12 @@ export const stepWorld = (
 ): WorldState => {
   const time = updateWorldTime(world.time, delta);
   const weather = updateWeather(world.weather, delta * time.speed);
+  const elapsedGameMinutes = delta * time.speed;
   const needyCreatures = world.creatures.map((creature) =>
-    updateHunger(updateThirst(creature, delta), delta));
+    updateHunger(
+      updateThirst(creature, elapsedGameMinutes),
+      elapsedGameMinutes,
+    ));
   let grassBlades = updateGrassRegrowth(world.grassBlades, delta);
   let plantFoods = updatePlantFoodRegrowth(world.plantFoods, delta);
 
