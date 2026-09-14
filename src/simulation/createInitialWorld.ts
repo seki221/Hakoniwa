@@ -72,6 +72,8 @@ const createCreatures = (
       lifeExpectancy: 4_320 + Math.random() * 2_880,
       generation: 0,
       parentIds: [],
+      sex: i % 2 === 0 ? 'FEMALE' : 'MALE',
+      partnerId: null,
       reproductionTimer: 45 + Math.random() * 75,
     });
     occupiedAreas.push({

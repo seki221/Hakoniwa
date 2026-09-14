@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 export type CreatureFaction = 'GREEN' | 'RED' | 'BLUE';
+export type CreatureSex = 'FEMALE' | 'MALE';
 export type CreatureBehaviorState =
   | 'WANDERING'
   | 'HEADING_TO_WATER'
@@ -43,6 +44,8 @@ export type CreatureState = {
   lifeExpectancy: number;
   generation: number;
   parentIds: string[];
+  sex: CreatureSex;
+  partnerId: string | null;
   reproductionTimer: number;
 };
 
