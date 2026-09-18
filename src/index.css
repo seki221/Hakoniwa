@@ -13,3 +13,64 @@ body {
 * {
   box-sizing: border-box;
 }
+
+.world-shell {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.connection-overlay {
+  position: absolute;
+  z-index: 10;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  display: flex;
+  max-width: min(360px, calc(100vw - 24px));
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 12px;
+  background: rgb(16 28 24 / 78%);
+  color: #f5fff9;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.connection-overlay__indicator {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #62d993;
+  box-shadow: 0 0 0 3px rgb(98 217 147 / 18%);
+}
+
+.connection-overlay--connecting .connection-overlay__indicator,
+.connection-overlay--saving .connection-overlay__indicator {
+  background: #f3c96b;
+  box-shadow: 0 0 0 3px rgb(243 201 107 / 18%);
+}
+
+.connection-overlay--error .connection-overlay__indicator {
+  background: #ff7c72;
+  box-shadow: 0 0 0 3px rgb(255 124 114 / 18%);
+}
+
+.connection-overlay__label {
+  font-weight: 650;
+}
+
+.connection-overlay__error {
+  margin-top: 3px;
+  color: #ffd4d0;
+  overflow-wrap: anywhere;
+}
